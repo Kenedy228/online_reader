@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+</head>
+<body>
+    <header th:fragment="header">
+        <div class="header-container">
+            <div class="header-logo">
+                <img src="assets/logo.svg" alt="Логотип ДостоRead">
+            </div>
+            <div class="header-menu">
+                <nav>
+                    <ul>
+                        <li><a th:href="@{./}">Главная</a></li>
+                        <li><a th:href="@{./login}">Вход в аккаунт</a></li>
+                    </ul>
+                </nav>
+            </div>
+        </div>
+    </header>
+</body>
+</html>

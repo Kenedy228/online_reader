@@ -1,0 +1,12 @@
+* {
+    box-sizing: border-box;
+    margin: 0 auto;
+    --FuturaFF: Futura, serif;
+    --GeorgiaFF: Georgia;
+}
+
+body {
+    width: 100%;
+    margin: 0 auto;
+    padding: 0;
+}

@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="description" content="Курсовая работа студентов группы БО231ИСТ Журавлева Д.В. и Наумова С.А. по дисциплине информационные WEB-системы." />
+    <meta name="author" content="Журавлев Д.В. и Наумов С.А." />
+    <meta name="viewport"
+          content="width=device-width, usescalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <link rel="stylesheet" type="text/css" th:href="@{styles/styles.css}"/>
+    <link rel="stylesheet" type="text/css" th:href="@{styles/header.css}" />
+    <link rel="stylesheet" type="text/css" th:href="@{styles/registration.css}" />
+
+    <title>ДостоRead - вход в аккаунт</title>
+</head>
+<body>
+<div th:replace="~{components/header :: header}"></div>
+
+<section class="main-section">
+    <div class="main-container">
+        <h1 th:text="${pageTitle}"></h1>
+        <form class="register_form" method="post">
+            <label for="username">Имя пользователя: <input type="text" name="username" id="username"/></label>
+            <p class="username_err_text"></p>
+            <label for="email">E-почта: <input type="email" name="email" id="email"></label>
+            <p class="email_err_text"></p>
+            <label for="password">Пароль: <input type="password" name="password" id="password"/></label>
+            <p class="password_err_text"></p>
+            <label for="confirm-password">Подтверждение пароля: <input type="password" name="confirm-password" id="confirm-password"/></label>
+            <p class="confirmation-password_err_text"></p>
+            <div class="show_hide_passwrd_container">
+                <p class="show_hide_passwrd_text">Показать пароль:</p>
+                <input src="assets/hide.png" alt="картинка показать пароль" type="image" class="show_hide_passwrd" data-status="hide"/>
+            </div>
+            <input type="submit" th:value="Продолжить" class="submit_btn">
+            <p class="to_login">Если у вас уже есть аккаунта, <a th:href="@{login}">войдите</a> в него прямо сейчас!</p>
+        </form>
+    </div>
+</section>
+
+<script src="js/passwordVisibilityChangerForRegistration.bundle.js" type="module"></script>
+</body>
+</html>

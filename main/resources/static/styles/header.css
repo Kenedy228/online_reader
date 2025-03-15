@@ -1,0 +1,46 @@
+header {
+    height: 70px;
+    background: black;
+}
+
+.header-container {
+    width: 80%;
+}
+
+.header-logo {
+    float: left;
+}
+
+.header-logo > img {
+    width: 60px;
+    height: 60px;
+}
+
+nav {
+    float: right;
+}
+
+ul {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+}
+
+ul > li {
+    display: inline-block;
+    margin-left: 20px;
+}
+
+ul > li > a {
+    font-family: var(--FuturaFF);
+    text-decoration: none;
+    color: white;
+    display: inline-block;
+    transition: background-color 0.5s;
+    padding: 23px 15px;
+}
+
+ul > li > a:hover {
+    cursor: pointer;
+    opacity: 0.8;
+}
