@@ -1,46 +1,32 @@
 header {
-    height: 70px;
+    min-height: 70px;
     background: black;
+    color: white;
 }
 
 .header-container {
-    width: 80%;
+    width: min(1100px, calc(100% - 2rem));
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem 1rem;
 }
 
-.header-logo {
-    float: left;
-}
-
-.header-logo > img {
-    width: 60px;
-    height: 60px;
-}
-
-nav {
-    float: right;
-}
-
-ul {
-    list-style-type: none;
-    margin: 0;
-    padding: 0;
-}
-
-ul > li {
+.header-logo { margin: 0; }
+.header-logo > img { display: block; width: 60px; height: 60px; }
+header nav { margin: 0; max-width: 100%; }
+header ul { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; list-style: none; margin: 0; padding: 0; }
+header li { margin: 0; max-width: 100%; }
+header a, .header-logout button {
     display: inline-block;
-    margin-left: 20px;
-}
-
-ul > li > a {
     font-family: var(--FuturaFF);
     text-decoration: none;
     color: white;
-    display: inline-block;
-    transition: background-color 0.5s;
-    padding: 23px 15px;
+    padding: 0.75rem;
 }
-
-ul > li > a:hover {
-    cursor: pointer;
-    opacity: 0.8;
-}
+.header-username { display: block; overflow-wrap: anywhere; padding: 0.75rem; }
+.header-logout { width: auto; height: auto; margin: 0; border: 0; border-radius: 0; background: transparent; }
+.header-logout button { border: 0; background: transparent; font-size: inherit; cursor: pointer; }
+header a:hover, .header-logout button:hover { text-decoration: underline; }
+header a:focus-visible, .header-logout button:focus-visible { outline: 2px solid white; outline-offset: 2px; }

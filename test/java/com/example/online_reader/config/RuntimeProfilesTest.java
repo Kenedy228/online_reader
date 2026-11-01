@@ -51,6 +51,10 @@ class RuntimeProfilesTest {
         var environment = prepare(production(), "--spring.profiles.active=production");
         assertThat(environment.getProperty("spring.jpa.hibernate.ddl-auto")).isEqualTo("validate");
         assertThat(environment.getProperty("spring.h2.console.enabled")).isEqualTo("false");
+        assertThat(environment.getProperty("server.servlet.session.cookie.secure")).isEqualTo("true");
+        assertThat(environment.getProperty("server.servlet.session.cookie.http-only")).isEqualTo("true");
+        assertThat(environment.getProperty("server.servlet.session.cookie.same-site")).isEqualTo("lax");
+        assertThat(environment.getProperty("server.servlet.session.timeout")).isEqualTo("15m");
         assertThat(environment.getProperty("debug")).isEqualTo("false");
         assertThat(environment.getProperty("spring.jpa.show-sql")).isEqualTo("false");
         assertThat(environment.getProperty("server.error.include-stacktrace")).isEqualTo("never");
@@ -86,7 +90,13 @@ class RuntimeProfilesTest {
             "spring.flyway.clean-disabled=false", "spring.flyway.baseline-on-migrate=true",
             "spring.flyway.validate-on-migrate=false", "spring.flyway.locations=filesystem:/tmp/unsafe",
             "spring.h2.console.enabled=true", "debug=true", "trace=true",
-            "spring.jpa.show-sql=true", "logging.level.org.hibernate.SQL=DEBUG", "server.error.include-stacktrace=always"})
+            "server.servlet.session.cookie.secure=false", "server.servlet.session.cookie.http-only=false",
+            "server.servlet.session.cookie.same-site=none", "server.servlet.session.tracking-modes=url",
+            "server.servlet.session.timeout=0s", "server.servlet.session.timeout=61m",
+            "server.servlet.session.persistent=true", "server.forward-headers-strategy=framework",
+            "online-reader.auth.max-attempts=0", "online-reader.auth.max-attempts=101",
+            "online-reader.auth.max-clients=4097", "online-reader.auth.window=999ms",
+            "online-reader.auth.window=16m", "spring.jpa.show-sql=true", "logging.level.org.hibernate.SQL=DEBUG", "server.error.include-stacktrace=always"})
     void rejectsInvalidProductionOverridesWithoutEchoingValues(String override) {
         String[] setting = override.split("=", 2);
         var settings = production();

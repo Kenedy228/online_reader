@@ -67,6 +67,25 @@ public final class RuntimeEnvironmentPostProcessor implements EnvironmentPostPro
         expected(environment, "spring.jpa.show-sql", "false");
         expected(environment, "logging.level.org.hibernate.SQL", "OFF");
         expected(environment, "logging.level.org.hibernate.orm.jdbc.bind", "OFF");
+        number(environment, "online-reader.auth.max-attempts", 1, 100);
+        number(environment, "online-reader.auth.max-clients", 1, 4096);
+        validate(environment, "online-reader.auth.window", value -> {
+            var window = DurationStyle.detectAndParse(value);
+            return window.compareTo(java.time.Duration.ofSeconds(1)) >= 0
+                    && window.compareTo(java.time.Duration.ofMinutes(15)) <= 0;
+        });
+        expected(environment, "server.servlet.session.cookie.name", "JSESSIONID");
+        expected(environment, "server.servlet.session.cookie.http-only", "true");
+        expected(environment, "server.servlet.session.cookie.same-site", "lax");
+        expected(environment, "server.servlet.session.cookie.secure", Boolean.toString("production".equals(profiles[0])));
+        expected(environment, "server.servlet.session.tracking-modes", "cookie");
+        expected(environment, "server.servlet.session.persistent", "false");
+        expected(environment, "server.forward-headers-strategy", "none");
+        validate(environment, "server.servlet.session.timeout", value -> {
+            var timeout = DurationStyle.detectAndParse(value);
+            return timeout.compareTo(java.time.Duration.ofMinutes(1)) >= 0
+                    && timeout.compareTo(java.time.Duration.ofHours(1)) <= 0;
+        });
         expected(environment, "debug", "false");
         expected(environment, "trace", "false");
         expected(environment, "server.error.include-stacktrace", "never");

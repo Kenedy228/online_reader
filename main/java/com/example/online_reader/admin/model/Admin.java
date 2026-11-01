@@ -3,6 +3,8 @@ package com.example.online_reader.admin.model;
 import com.example.online_reader.enums.RoleType;
 import com.example.online_reader.actions.model.Action;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Pattern;
+import com.example.online_reader.security.PasswordHashFormat;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -18,8 +20,9 @@ public class Admin {
     //user credentials
     @Column(unique = true, nullable = false, length = 50)
     private String login;
-    @Column(nullable = false, length = 60)
-    private String password;
+    @Column(name = "password", nullable = false, length = 255)
+    @Pattern(regexp = PasswordHashFormat.BCRYPT, message = "Password must be an encoded hash")
+    private String passwordHash;
     @Column(nullable = false)
     private Boolean accountNonExpired = true;
     @Column(nullable = false)
@@ -49,9 +52,9 @@ public class Admin {
 
     }
 
-    public Admin(String login, String password) {
+    public Admin(String login, String passwordHash) {
         this.login = login;
-        this.password = password;
+        this.passwordHash = passwordHash;
     }
 
     public String getLogin() {
@@ -62,12 +65,12 @@ public class Admin {
         this.login = login;
     }
 
-    public String getPassword() {
-        return password;
+    public String getPasswordHash() {
+        return passwordHash;
     }
 
-    public void setPassword(String password) {
-        this.password = password;
+    public void setPasswordHash(String passwordHash) {
+        this.passwordHash = passwordHash;
     }
 
     public Boolean getAccountNonExpired() {

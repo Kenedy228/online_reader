@@ -20,14 +20,17 @@
     <div class="main-container">
         <h1 th:text="${pageTitle}"></h1>
 
-        <form class="login-form" method="post" th:action="@{/login}" th:object="${user}" novalidate>
-            <label for="username">Имя пользователя: <input type="text" name="username" id="username" th:field="*{username}" autocomplete="username" required
-                th:attr="aria-invalid=${#fields.hasErrors('username')},aria-describedby=${#fields.hasErrors('username') ? 'username-error' : null}"/></label>
-            <p id="username-error" th:if="${#fields.hasErrors('username')}" th:errors="*{username}" class="err_text" role="alert"></p>
-
-            <label for="password">Пароль: <input type="password" name="password" id="password" th:field="*{password}" autocomplete="current-password" required
-                th:attr="aria-invalid=${#fields.hasErrors('password')},aria-describedby=${#fields.hasErrors('password') ? 'password-error' : null}"/></label>
-            <p id="password-error" th:if="${#fields.hasErrors('password')}" th:errors="*{password}" class="err_text" role="alert"></p>
+        <p th:if="${loggedOut}" role="status">Вы вышли из аккаунта.</p>
+        <form class="login-form" method="post" th:action="@{/login}">
+            <p id="login-error" class="err_text" role="alert" th:if="${loginError}">Неверное имя пользователя или пароль.</p>
+            <label for="username">Имя пользователя:
+                <input type="text" name="username" id="username" autocomplete="username" required maxlength="50"
+                       th:attr="aria-invalid=${loginError},aria-describedby=${loginError ? 'login-error' : null}"/>
+            </label>
+            <label for="password">Пароль:
+                <input type="password" name="password" id="password" autocomplete="current-password" required
+                       th:attr="aria-invalid=${loginError},aria-describedby=${loginError ? 'login-error' : null}"/>
+            </label>
 
             <div class="show_hide_password_container">
                 <p class="show_hide_password_text">Показать пароль:</p>
