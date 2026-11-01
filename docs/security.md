@@ -5,8 +5,8 @@ Runtime credentials не хранятся в properties и не выводятс
 Тестовые H2-данные и локальный Maven preset используют отдельные фиктивные настройки.
 
 Удаление текущих литералов не отзывает уже опубликованные credentials. История Git
-содержит исходные значения; до подтверждённой ротации [issue #2](https://github.com/Kenedy228/online_reader/issues/2)
-остаётся открытым. Работоспособность старых паролей не проверялась.
+содержит исходные значения; владелец подтвердил отзыв или замену обоих паролей в
+[issue #2](https://github.com/Kenedy228/online_reader/issues/2). Работоспособность старых паролей не проверялась.
 
 ## Окружение обычного запуска
 
@@ -15,8 +15,9 @@ Runtime credentials не хранятся в properties и не выводятс
 | `SPRING_DATASOURCE_URL` | JDBC URL выбранной локальной PostgreSQL |
 | `SPRING_DATASOURCE_USERNAME` | Имя пользователя БД |
 | `SPRING_DATASOURCE_PASSWORD` | Пароль БД |
-| `SPRING_MAIL_USERNAME` | Имя пользователя SMTP |
-| `SPRING_MAIL_PASSWORD` | Пароль SMTP |
+| `SPRING_PROFILES_ACTIVE` | Явно выбранный `local` или `production` |
+| `SPRING_MAIL_HOST`, `SPRING_MAIL_PORT` | Локальный Mailpit, без auth и credentials |
+| `ONLINE_READER_STORAGE_ROOT` | Каталог хранения; в `production` обязателен абсолютный путь |
 
 Spring Boot не загружает `.env` автоматически. Можно создать приватный файл
 из пустого шаблона и экспортировать значения перед запуском:
@@ -36,15 +37,18 @@ set +a
 `.gitignore` исключает `.env`; в `.env.example` credentials оставлены пустыми.
 
 Для ознакомительного запуска используйте `./mvnw spring-boot:test-run@local`:
-он не требует этих переменных и явно задаёт H2/localhost аргументами приложения.
-Java-тесты изолированы через `@TestPropertySource`. Эти проверки не обращаются
-к внешним БД или SMTP и не подтверждают работоспособность реального SMTP/паролей.
+он использует профиль `test` с H2 и localhost SMTP из тестового classpath.
+EnvironmentPostProcessor принудительно ставит эти настройки выше runtime-окружения
+до создания beans. При отсутствии тестового ресурса (в обычном JAR) `test`
+отклоняется. Проверки не обращаются к внешним БД или SMTP.
 
-Профиль `dev` пока остаётся активным по умолчанию — его переработка в
-[#6](https://github.com/Kenedy228/online_reader/issues/6). Внешний SMTP host/port
-пока не заменены: локальный Mailpit добавляется в
-[#13](https://github.com/Kenedy228/online_reader/issues/13). Не проверяйте старые
-credentials подключением к сервисам и не отправляйте тестовые письма наружу.
+Runtime-профили `local` и `production` разрешают только локальный Mailpit,
+внешний SMTP host отклоняется. SMTP credentials не требуются. Контейнер Mailpit
+и интеграция отправки письма остаются в [#13](https://github.com/Kenedy228/online_reader/issues/13).
+Параметры профилей, лимитов, путей и таймаутов — в README и `.env.example`.
+`production` предназначен для локальной проверки конфигурации, не для деплоя.
+Ошибки валидации конфигурации содержат имена ключей без введённых значений.
+Не включайте debug/trace или вывод SQL для диагностики с реальными credentials.
 
 ## Проверка перед коммитом
 

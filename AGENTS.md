@@ -137,20 +137,29 @@ Webpack собирался с предупреждением об отсутст
 `package-lock.json` остаётся под Git для установки через `npm ci`
 ([#5](https://github.com/Kenedy228/online_reader/issues/5)).
 
-**Не запускайте Java-тесты с dev datasource.** `./mvnw test` использует профиль `test`;
-оба имеющихся класса явно применяют `test/resources/application-test.properties`
-через `@TestPropertySource`, чтобы окружение не подменяло H2 внешней БД.
-`UserTest` работает в транзакции с rollback и проверяет чтение сохранённой записи.
-Web smoke проверяет главную и HTTP-выдачу bundles. H2 не подтверждает PostgreSQL-
-совместимость — последующие проверки остаются в #11/#27.
+**Не запускайте Java-тесты с runtime datasource.** `./mvnw test` использует `test`.
+`RuntimeEnvironmentPostProcessor` загружает `test/resources/application-test.properties`
+с приоритетом выше окружения и CLI до создания beans: только H2 и localhost SMTP.
+Тестовая конфигурация и H2 отсутствуют в обычном JAR; `test` требует test classpath.
+`UserTest` работает в транзакции с rollback. H2 не подтверждает PostgreSQL-
+совместимость — соответствующие проверки остаются в #11/#27.
 
-Без внешней БД приложение запускается через
-`./mvnw spring-boot:test-run@local`.
-Execution `local` фиксирует H2, localhost SMTP и HTTP bind аргументами приложения
-выше окружения; обычный `test-run` позволяет dev-переменным переопределить профиль.
-Это временное H2-окружение с отключённой проверкой SMTP при старте, не production.
-Обычный JAR требует явно заданных runtime-переменных; не используйте прежние
-опубликованные credentials (#2). Безопасные runtime-профили ещё требуют #6.
+Без PostgreSQL используйте `./mvnw spring-boot:test-run@local`: это H2 preset
+с профилем `test`, а не runtime-профиль `local`. Обычный JAR требует явного выбора
+ровно одного профиля `local`/`production`, DB credentials и готовой схемы PostgreSQL.
+`dev` и неявный выбор профиля больше не поддерживаются. В runtime используется
+`ddl-auto=validate`; миграции ещё требуют #11. Не обходите отказ включением `update`.
+
+`local` и `production` направляют почту только в Mailpit (loopback или `mailpit`),
+SMTP auth выключена; контейнер и отправка тестового письма ещё требуют #13.
+Адреса, credentials, путь хранения, multipart-лимиты и конечные таймауты вынесены
+в окружение; контракт — `.env.example` и README. В `production` storage root
+обязателен и абсолютен; создание/права каталога проверяются при реализации #22.
+Валидация конфигурации выполняется до I/O; ошибки содержат только имя параметра.
+JNDI, альтернативные Hikari connection settings и `spring.jpa.properties.*`
+отклоняются во всех профилях; не обходите основной datasource/DDL-контракт.
+Не возвращайте общий `spring.profiles.active`, packaged test properties,
+H2 console, debug/trace, SQL logging или раскрытие ошибок клиенту.
 
 ## Проверка изменений и приёмка
 

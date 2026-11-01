@@ -88,55 +88,89 @@ npm run build
 автоматически; отдельная команда npm нужна только для самостоятельной работы
 с frontend. Изменяйте исходники TypeScript, а не результаты сборки.
 
-## Локальный запуск для проверки
+## Запуск и профили
 
-Для ознакомительного запуска без внешней БД используйте тестовый classpath:
+Профиль выбирается явно через `SPRING_PROFILES_ACTIVE`. Без профиля, с прежним
+`dev` или со смесью профилей приложение завершается до создания datasource.
+
+| Профиль | База и почта | Назначение |
+| --- | --- | --- |
+| `local` | PostgreSQL из окружения, Mailpit на `127.0.0.1:1025` по умолчанию | Разработка с локальными сервисами |
+| `test` | H2 в памяти и localhost SMTP, настройки принудительно из тестового classpath | Изолированные тесты и ознакомительный запуск |
+| `production` | PostgreSQL, явно указанный Mailpit и абсолютный путь хранения | Проверка production-конфигурации без деплоя |
+
+Быстрый ознакомительный запуск без PostgreSQL:
 
 ```sh
 ./mvnw spring-boot:test-run@local
 ```
 
-Главная страница доступна по `http://localhost:8080`. Этот запуск использует
-H2 в памяти и тестовый classpath; данные не предназначены для постоянного хранения.
-Execution `local` явно задаёт datasource, пустые тестовые credentials, localhost SMTP
-и привязку HTTP к `127.0.0.1` аргументами приложения с приоритетом выше окружения.
-Проверка SMTP-соединения при старте отключена. Почтового перехватчика пока нет.
-Обычный `spring-boot:test-run` без `@local` такой защиты от dev-переменных не даёт.
-Остановить приложение можно через `Ctrl+C`.
+Откройте `http://127.0.0.1:8080`; остановка — `Ctrl+C`. Maven execution `local`
+использует профиль `test` и тестовый classpath. H2 удаляется при остановке;
+настройки из `test/resources/application-test.properties` имеют приоритет над
+окружением и аргументами datasource/SMTP. Этот preset отличается от runtime-профиля
+`local`, который использует PostgreSQL.
 
-В обычном JAR нет H2 и ресурсов из `test/resources`: он предназначен для PostgreSQL.
-Запуск с PostgreSQL требует отдельно подготовленной локальной БД и явных
-настроек окружения. Credentials берутся из переменных без встроенных значений;
-подготовка `.env.example` описана в [инструкции по секретам](docs/security.md).
-Старые опубликованные credentials не используйте; их ротация и безопасные
-runtime-профили остаются отдельными задачами.
-Восстановление сборки отслеживается в
-[issue #3](https://github.com/Kenedy228/online_reader/issues/3).
+Для обычного JAR подготовьте собственную локальную PostgreSQL со схемой приложения
+и Mailpit. Docker Compose и миграции пока отсутствуют ([#9](https://github.com/Kenedy228/online_reader/issues/9),
+[#11](https://github.com/Kenedy228/online_reader/issues/11)); приложение не создаёт
+и не обновляет схему автоматически: `ddl-auto=validate` в обоих runtime-профилях.
+На пустой БД оно завершится ошибкой валидации схемы. До реализации миграций
+воспроизводимый запуск без подготовленной схемы доступен через H2 preset выше.
+
+Создайте приватный `.env` из [.env.example](.env.example), задайте свои DB credentials
+и экспортируйте переменные по [инструкции](docs/security.md). Затем:
+
+```sh
+java -jar target/online-reader-0.0.1-SNAPSHOT.jar
+```
+
+Шаблон выбирает `local`. Для production-like проверки задайте
+`SPRING_PROFILES_ACTIVE=production`, `SPRING_MAIL_HOST=127.0.0.1` (либо `mailpit`
+в локальной Docker-сети) и абсолютный `ONLINE_READER_STORAGE_ROOT`.
+В JAR отсутствуют H2 и тестовая конфигурация; профиль `test` с обычным JAR отклоняется.
+Деплой и подключение к внешним сервисам не выполняются.
 
 ## Конфигурация и безопасность
 
-- `application.properties` включает профиль `dev` по умолчанию и содержит SMTP-настройки.
-- `application-dev.properties` задаёт PostgreSQL для разработки.
-- `application-test.properties` задаёт H2 и включает H2 console; само наличие этого
-  файла в `main/resources` не задаёт безопасное production-окружение.
-- При тестировании файл `test/resources/application-test.properties` переопределяет
-  datasource на H2 в памяти, отключает H2 console и внешний SMTP. Java-тесты явно
-  выбирают профиль `test` и этот файл с приоритетом выше переменных окружения.
+Общая конфигурация не активирует профиль. Адрес БД и credentials обязательны,
+встроенных паролей нет. Проверка конфигурации выполняется после загрузки Spring
+ConfigData, до создания beans. Ошибка содержит только имя неверного параметра.
+Ожидается PostgreSQL JDBC URL вида `jdbc:postgresql://host:5432/database`;
+query-параметры (например `sslmode`) допустимы, credentials передаются отдельно.
 
-Runtime credentials вынесены из properties в окружение, вывод логина/пароля
-из обработчика входа удалён. Ранее опубликованные значения остаются в истории:
-не используйте их и не публикуйте в README, issues, логах или env-файлах в Git.
-Удаление из файлов не заменяет отзыв; подтверждение ротации остаётся в
-[#2](https://github.com/Kenedy228/online_reader/issues/2). Переменные, загрузка
-`.env`, staged secret check и CI описаны в [docs/security.md](docs/security.md).
-Разделение профилей —
-в [#6](https://github.com/Kenedy228/online_reader/issues/6).
+Оба runtime-профиля используют только Mailpit: разрешены `127.0.0.1`, `localhost`,
+`::1` и имя сервиса `mailpit`. Внешний SMTP host отклоняется даже при переопределении
+через окружение. SMTP auth отключена, SMTP credentials не нужны. Таймауты
+соединения/чтения/записи конечны; проверка SMTP при старте отключена, поэтому запуск
+сам по себе не подтверждает доступность Mailpit. Его контейнер и отправка тестового
+письма остаются в [#13](https://github.com/Kenedy228/online_reader/issues/13).
 
-Локальное окружение пока не автоматизировано. Запланированы
-[Docker Compose с PostgreSQL](https://github.com/Kenedy228/online_reader/issues/9),
-[Mailpit вместо внешнего SMTP](https://github.com/Kenedy228/online_reader/issues/13)
-и [Makefile](https://github.com/Kenedy228/online_reader/issues/15).
-До их реализации команд запуска этих компонентов в проекте нет.
+В `.env.example` перечислены HTTP/DB/SMTP timeouts, multipart-лимиты и путь хранения.
+Лимиты должны быть положительными, request limit — не меньше file limit;
+Hikari validation timeout — меньше connection timeout. В production-профиле путь
+хранения обязателен и должен быть абсолютным. Функция загрузки книг ещё отсутствует:
+настройка пути пока не создаёт каталог и не подтверждает права записи; реализация и
+проверка файлового хранилища — в [#22](https://github.com/Kenedy228/online_reader/issues/22).
+Локальный каталог по умолчанию `./var/books` исключён из Git.
+
+H2 console, debug/trace и вывод SQL выключены. Ответы Spring error не включают
+stack trace, сообщение исключения и binding errors. Попытки включить эти настройки
+или автоматическое обновление схемы в runtime-профилях отклоняются при старте.
+JNDI, альтернативные Hikari connection settings и прямые `spring.jpa.properties.*`
+не поддерживаются: они обходят основной datasource или правила схемы и отклоняются
+во всех профилях. Из Hikari overrides допускаются два документированных таймаута.
+Это разделение конфигурации; текущая аутентификация и права ещё требуют #14/#17.
+
+Опубликованные ранее DB/SMTP credentials отозваны или заменены владельцем
+([#2](https://github.com/Kenedy228/online_reader/issues/2)); значения остаются в Git
+history. Не используйте их. Проверки секретов и правила работы с `.env` описаны
+в [docs/security.md](docs/security.md).
+
+Автоматизация локальных сервисов и команд остаётся в
+[#9](https://github.com/Kenedy228/online_reader/issues/9),
+[#13](https://github.com/Kenedy228/online_reader/issues/13) и
+[#15](https://github.com/Kenedy228/online_reader/issues/15).
 
 ## Проверки
 

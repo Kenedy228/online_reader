@@ -34,3 +34,6 @@ out/
 # OS metadata
 .DS_Store
 Thumbs.db
+
+# Local book storage (runtime profile local)
+/var/books/
