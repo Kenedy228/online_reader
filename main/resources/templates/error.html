@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ДостоRead — ошибка запроса</title>
+    <link rel="stylesheet" th:href="@{/styles/styles.css}">
+    <link rel="stylesheet" th:href="@{/styles/error.css}">
+</head>
+<body>
+<main class="error-container">
+    <p>ДостоRead · <span th:text="${status}"></span></p>
+    <h1 th:text="${errorTitle}"></h1>
+    <p>Запрос не выполнен. Проверьте данные или вернитесь на главную страницу.</p>
+    <nav aria-label="Навигация после ошибки">
+        <a th:href="@{/}">На главную</a>
+        <a th:href="@{/login}">Войти в аккаунт</a>
+    </nav>
+</main>
+</body>
+</html>

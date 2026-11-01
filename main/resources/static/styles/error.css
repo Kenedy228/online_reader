@@ -1,0 +1,6 @@
+.error-container { width: min(45rem, calc(100% - 2rem)); margin: 3rem auto; font-family: var(--GeorgiaFF); overflow-wrap: anywhere; }
+.error-container h1 { font-size: 2rem; margin: 1rem 0; }
+.error-container p { margin: 1rem 0; }
+.error-container nav { display: flex; flex-wrap: wrap; gap: 1rem; margin: 1rem 0; }
+.error-container a { display: inline-block; padding: 0.5rem; color: #1649a3; }
+.error-container a:focus-visible { outline: 2px solid #1649a3; outline-offset: 2px; }
