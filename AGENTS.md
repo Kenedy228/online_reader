@@ -85,9 +85,8 @@ wrappers или зависимости без текущей ответстве�
   не проверяйте работоспособность. Отзыв выполняет владелец; удаление из текущих
   файлов и зелёный CI не заменяют подтверждённую ротацию.
 - Не обращайтесь к внешним SMTP/БД ради проверки. Для тестов нужны изолированная
-  БД и локальный перехватчик почты. `compose.yaml` предоставляет PostgreSQL и
-  приложение (opt-in профиль `app`). Mailpit и Makefile ещё требуют
-  [#13](https://github.com/Kenedy228/online_reader/issues/13) и
+  БД и локальный перехватчик почты. `compose.yaml` предоставляет PostgreSQL, Mailpit и
+  приложение (opt-in профиль `app`). Makefile ещё требует
   [#15](https://github.com/Kenedy228/online_reader/issues/15).
 - Проверяйте внешние данные на сервере: тип, длину, формат, диапазон и бизнес-правила.
   Для файлов ограничивайте размер, формат, ресурсы обработки и место хранения.
@@ -147,8 +146,7 @@ Webpack собирался с предупреждением об отсутст
 Без PostgreSQL используйте `./mvnw spring-boot:test-run@local`: это H2 preset
 с профилем `test`, а не runtime-профиль `local`. Обычный JAR требует явного выбора
 ровно одного профиля `local`/`production`, DB credentials и локальной PostgreSQL.
-`dev` и неявный выбор профиля больше не поддерживаются. В runtime используется
-Flyway применяет `main/resources/db/migration/V*.sql`, затем Hibernate выполняет
+`dev` и неявный выбор профиля больше не поддерживаются. Flyway применяет `main/resources/db/migration/V*.sql`, затем Hibernate выполняет
 `ddl-auto=validate`. Историю миграций не переписывайте; clean, auto-baseline,
 отдельный datasource Flyway и изменение его locations запрещены runtime guard.
 Правила схемы/восстановления — `docs/database.md`. Не включайте `update`.
@@ -157,7 +155,11 @@ Flyway применяет `main/resources/db/migration/V*.sql`, затем Hiber
 быстрый запуск. H2 использует `spring.flyway.enabled=false` и create-drop.
 
 `local` и `production` направляют почту только в Mailpit (loopback или `mailpit`),
-SMTP auth выключена; контейнер и отправка тестового письма ещё требуют #13.
+SMTP auth/TLS выключены; соответствующие overrides отклоняются до I/O.
+`./mvnw -Pmailpit-it clean verify` проверяет Spring Mail → disposable Mailpit,
+содержимое и очистку inbox, а также timeout зависшего loopback SMTP. Контекст
+проверки загружает настоящие mail properties и не наследует SMTP env оператора.
+Профили `postgres-it,mailpit-it` можно запускать вместе; обычная suite Docker не требует.
 Адреса, credentials, путь хранения, multipart-лимиты и конечные таймауты вынесены
 в окружение; контракт — `.env.example` и README. В `production` storage root
 обязателен и абсолютен; создание/права каталога проверяются при реализации #22.
@@ -169,11 +171,14 @@ H2 console, debug/trace, SQL logging или раскрытие ошибок кл
 
 ## Локальные контейнеры
 
-`docker compose up -d --wait postgres` запускает БД для host JAR.
+`docker compose up -d --wait postgres mailpit` запускает сервисы для host JAR.
 `docker compose --profile app up -d --build --wait` собирает и запускает приложение
-после healthy PostgreSQL. Private `.env` содержит локальные DB credentials;
+после healthy PostgreSQL и Mailpit. Private `.env` содержит локальные DB credentials;
 Compose читает его для подстановки, Spring Boot на хосте требует явного экспорта.
 Контракт портов/переменных/остановки — `docs/local-development.md`.
+Mailpit UI/API/SMTP ограничены loopback, relay/forward не настраиваются, проверка
+версии и reverse DNS выключены. Inbox временный, без persistent volume; очистка
+затрагивает только письма. Команды smoke/очистки — `docs/mail.md`.
 
 `docker compose --profile app down` сохраняет PostgreSQL volume. Не применяйте
 `down -v`, `volume prune` или глобальную очистку к пользовательским данным.
