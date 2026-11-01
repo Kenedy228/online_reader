@@ -3,7 +3,10 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "build": "webpack --config webpack.config.js"
+    "build": "webpack --mode production --config webpack.config.js",
+    "build:dev": "webpack --mode development --config webpack.config.js",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src --max-warnings=0"
   },
   "keywords": [],
   "author": "",
@@ -11,8 +14,10 @@
   "description": "",
   "devDependencies": {
     "@types/node": "^22.13.10",
+    "eslint": "10.14.0",
     "ts-loader": "^9.5.2",
     "typescript": "^5.8.2",
+    "typescript-eslint": "8.72.1",
     "webpack": "^5.98.0",
     "webpack-cli": "^6.0.1"
   }

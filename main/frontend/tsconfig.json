@@ -5,7 +5,11 @@
     "outDir": "../resources/static/js",
     "rootDir": "./src",
     "strict": true,
-    "esModuleInterop": true
+    "esModuleInterop": true,
+    "moduleResolution": "bundler",
+    "types": []
   },
-  "include": ["src/**/*"]
+  "include": [
+    "src/**/*"
+  ]
 }
