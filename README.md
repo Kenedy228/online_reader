@@ -111,12 +111,13 @@ npm run build
 окружением и аргументами datasource/SMTP. Этот preset отличается от runtime-профиля
 `local`, который использует PostgreSQL.
 
-Для обычного JAR подготовьте собственную локальную PostgreSQL со схемой приложения
-и Mailpit. Docker Compose и миграции пока отсутствуют ([#9](https://github.com/Kenedy228/online_reader/issues/9),
-[#11](https://github.com/Kenedy228/online_reader/issues/11)); приложение не создаёт
-и не обновляет схему автоматически: `ddl-auto=validate` в обоих runtime-профилях.
-На пустой БД оно завершится ошибкой валидации схемы. До реализации миграций
-воспроизводимый запуск без подготовленной схемы доступен через H2 preset выше.
+Для обычного JAR подготовьте собственную локальную PostgreSQL и Mailpit.
+Docker Compose добавляется в [#9](https://github.com/Kenedy228/online_reader/issues/9).
+Flyway применяет версионированные SQL-миграции к пустой БД при запуске, затем
+Hibernate проверяет схему с `ddl-auto=validate`. Повторный запуск сохраняет данные
+и не выполняет уже применённые миграции. Непустая БД без истории Flyway требует
+отдельной проверки и переноса; автоматический baseline и clean запрещены.
+Правила изменения схемы и восстановления — в [docs/database.md](docs/database.md).
 
 Создайте приватный `.env` из [.env.example](.env.example), задайте свои DB credentials
 и экспортируйте переменные по [инструкции](docs/security.md). Затем:
@@ -193,9 +194,19 @@ Java-тесты запускаются через `./mvnw test` или вмес�
 и сохранение/поиск пользователя в H2. `UserTest` использует транзакционный rollback;
 тестовая конфигурация явно переопределяет datasource и SMTP.
 Не переключайте тесты на `dev` и не используйте рабочую БД для проверок.
-H2 smoke не доказывает совместимость PostgreSQL, миграций или всей читалки:
-дальнейшие проверки отслеживаются в [#11](https://github.com/Kenedy228/online_reader/issues/11)
-и [#27](https://github.com/Kenedy228/online_reader/issues/27).
+H2 smoke не доказывает совместимость PostgreSQL или всей читалки.
+Для схемы, миграций и JPA-mappings есть отдельный opt-in запуск с Docker:
+
+```sh
+./mvnw -Ppostgres-it clean verify
+```
+
+Он создаёт disposable PostgreSQL 17.11 из закреплённого официального образа,
+проверяет миграцию с пустой БД, Hibernate validate, запись через JPA,
+ограничения и повторное применение без потери данных. БД разработчика не используется;
+при недоступном Docker проверка падает, без fallback на H2/dev.
+Testcontainers автоматически удаляет контейнер после завершения.
+Дальнейшие сценарии читалки остаются в [#27](https://github.com/Kenedy228/online_reader/issues/27).
 
 ## Участие в разработке
 

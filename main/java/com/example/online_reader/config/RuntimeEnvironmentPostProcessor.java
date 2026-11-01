@@ -58,6 +58,11 @@ public final class RuntimeEnvironmentPostProcessor implements EnvironmentPostPro
         expected(environment, "spring.jpa.hibernate.ddl-auto", "validate");
         expected(environment, "spring.jpa.generate-ddl", "false");
         expected(environment, "spring.sql.init.mode", "never");
+        expected(environment, "spring.flyway.enabled", "true");
+        expected(environment, "spring.flyway.locations", "classpath:db/migration");
+        expected(environment, "spring.flyway.clean-disabled", "true");
+        expected(environment, "spring.flyway.baseline-on-migrate", "false");
+        expected(environment, "spring.flyway.validate-on-migrate", "true");
         expected(environment, "spring.h2.console.enabled", "false");
         expected(environment, "spring.jpa.show-sql", "false");
         expected(environment, "logging.level.org.hibernate.SQL", "OFF");
@@ -100,7 +105,7 @@ public final class RuntimeEnvironmentPostProcessor implements EnvironmentPostPro
         // Boot/Hikari/JPA have additional connection and schema configuration paths.
         // This project supports the documented datasource and finite timeout settings only.
         for (String key : new String[]{"spring.datasource.jndi-name", "spring.mail.jndi-name",
-                "spring.jpa.properties", "spring.datasource.hikari"}) {
+                "spring.jpa.properties", "spring.datasource.hikari", "spring.flyway"}) {
             boolean unsupported;
             try {
                 if (key.endsWith("jndi-name")) {
@@ -108,10 +113,14 @@ public final class RuntimeEnvironmentPostProcessor implements EnvironmentPostPro
                 } else {
                     var values = binder.bind(key, Bindable.mapOf(String.class, String.class))
                             .orElse(java.util.Map.of());
-                    unsupported = values.keySet().stream().anyMatch(name ->
-                            !key.equals("spring.datasource.hikari") || !Set.of(
-                                    "connectiontimeout", "validationtimeout").contains(
-                                    name.replace("-", "").toLowerCase(java.util.Locale.ROOT)));
+                    Set<String> allowed = switch (key) {
+                        case "spring.datasource.hikari" -> Set.of("connectiontimeout", "validationtimeout");
+                        case "spring.flyway" -> Set.of("enabled", "locations", "cleandisabled",
+                                "baselineonmigrate", "validateonmigrate");
+                        default -> Set.of();
+                    };
+                    unsupported = values.keySet().stream().anyMatch(name -> !allowed.contains(
+                            name.replace("-", "").toLowerCase(java.util.Locale.ROOT)));
                 }
             } catch (RuntimeException exception) {
                 throw new IllegalStateException("Unsupported runtime setting: " + key);
