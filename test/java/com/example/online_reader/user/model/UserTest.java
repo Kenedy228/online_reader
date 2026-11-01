@@ -3,30 +3,34 @@ package com.example.online_reader.user.model;
 import com.example.online_reader.user.repository.UserRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.transaction.annotation.Propagation;
-import org.springframework.transaction.annotation.Transactional;
+import org.springframework.test.context.TestPropertySource;
 
-import static org.junit.jupiter.api.Assertions.*;
+import java.util.UUID;
 
-@DataJpaTest
-@ActiveProfiles("dev")
-@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
-@Transactional(propagation = Propagation.NOT_SUPPORTED)
+import static org.assertj.core.api.Assertions.assertThat;
+
+@DataJpaTest(showSql = false)
+@ActiveProfiles("test")
+@TestPropertySource("classpath:application-test.properties")
 class UserTest {
 
     @Autowired
-    public UserRepository userRepository;
+    private UserRepository userRepository;
+
+    @Autowired
+    private TestEntityManager entityManager;
 
     @Test
-    public void test() {
+    void savedUserCanBeFoundByUsername() {
+        String username = "reader-" + UUID.randomUUID();
+        userRepository.saveAndFlush(new User(username, "test-hash-fixture"));
+        entityManager.clear();
 
-        User user2 = new User("stepan", "2131321");
-
-        userRepository.save(user2);
-
-        System.out.println(userRepository.findUserByUsername("stepan").getUsername());
+        User loaded = userRepository.findUserByUsername(username);
+        assertThat(loaded).isNotNull();
+        assertThat(loaded.getUsername()).isEqualTo(username);
     }
 }
