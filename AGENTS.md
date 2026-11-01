@@ -86,8 +86,8 @@ wrappers или зависимости без текущей ответстве�
   файлов и зелёный CI не заменяют подтверждённую ротацию.
 - Не обращайтесь к внешним SMTP/БД ради проверки. Для тестов нужны изолированная
   БД и локальный перехватчик почты. `compose.yaml` предоставляет PostgreSQL, Mailpit и
-  приложение (opt-in профиль `app`). Makefile ещё требует
-  [#15](https://github.com/Kenedy228/online_reader/issues/15).
+  приложение (opt-in профиль `app`). Команды разработки доступны через Makefile;
+  `make help` описывает цели.
 - Проверяйте внешние данные на сервере: тип, длину, формат, диапазон и бизнес-правила.
   Для файлов ограничивайте размер, формат, ресурсы обработки и место хранения.
 - Для защищённых действий проверяйте сессию, роль и владельца ресурса на сервере.
@@ -99,7 +99,8 @@ wrappers или зависимости без текущей ответстве�
 
 ## Команды и текущие ограничения проверок
 
-Основная команда из корня — `./mvnw clean verify` (`mvnw.cmd clean verify` на Windows).
+Основная команда из корня — `make check`, вызывающая `./mvnw clean verify`
+(`mvnw.cmd clean verify` остаётся прямым вариантом на Windows).
 Она устанавливает закреплённые Node.js 22.23.4/npm 10.9.9 в `target/frontend`,
 выполняет `npm ci --ignore-scripts`, собирает frontend, компилирует Java,
 запускает изолированные тесты и упаковывает executable JAR.
@@ -108,7 +109,16 @@ Maven/plugins закреплены wrapper/parent POM; не меняйте ве�
 Для `--release 21` требуется `lib/ct.sym`: наличие команды `java` или модуля
 `jdk.compiler` само по себе недостаточно. Enforcer проверяет это до сборки frontend;
 при отказе укажите `JAVA_HOME` на полный JDK, не снижайте Java release ради окружения.
-Makefile пока отсутствует; не выдавайте `make` за рабочую команду.
+Makefile делегирует wrapper/POM/npm/Compose, не содержит своих версий tools.
+`make help` — точные цели; семантика/зависимости — README. Make-команды требуют
+GNU Make/POSIX shell, Maven Wrapper с ZIP checksum требует unzip.
+`make setup/up/run` создают `.env` только если он отсутствует: случайный DB password,
+mode600, без вывода значений. Существующий env не меняется и не исполняется shell.
+Для проверок используйте собственные PROJECT_NAME/ENV_FILE/порты и синтетические данные.
+`make down` сохраняет volumes, `make clean` удаляет только Maven target. Не добавляйте
+скрытое удаление данных, проглатывание ошибок или deploy/push targets.
+CI вызывает `make check` и `make secret-check SECRET_MODE=snapshot`; snapshot только
+в чистом checkout, локальная staged-проверка не читает игнорируемый env оператора.
 
 Frontend scripts из `main/frontend`: `build` (production, без source maps),
 `build:dev` (development с `.map`), `typecheck` (`tsc --noEmit`) и `lint`

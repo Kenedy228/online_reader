@@ -62,8 +62,10 @@ Maven Wrapper использует Maven 3.9.16 с проверкой SHA-256 д
 Из корня репозитория:
 
 ```sh
-./mvnw clean verify
+make check
 ```
+
+Прямая эквивалентная команда: `./mvnw clean verify`.
 
 На Windows используйте `mvnw.cmd clean verify`. Сборка устанавливает Node/npm
 в `target/frontend`, выполняет `npm ci` без install scripts, компилирует TypeScript
@@ -87,6 +89,58 @@ npm run build
 Зависимости и bundles исключены из Git. Основная Maven-сборка генерирует ресурсы
 автоматически; отдельная команда npm нужна только для самостоятельной работы
 с frontend. Изменяйте исходники TypeScript, а не результаты сборки.
+
+## Команды разработки
+
+Makefile требует GNU Make и POSIX shell (Linux/macOS/WSL). Для Maven-команд
+нужны полный JDK 21–25 и `unzip` для ZIP checksum Wrapper; для контейнеров и IT —
+Docker/Compose, для `secret-check` — Gitleaks 8.30.1. Maven, Node/npm и их версии
+по-прежнему определяются wrapper/POM; Makefile вызывает эти инструменты.
+Запускайте команды из корня либо через `make -C /path/to/project`.
+
+```sh
+make help
+make setup
+make check
+make run
+make down
+```
+
+`setup` создаёт приватный `.env` только при его отсутствии: локальный DB user и
+случайный пароль, права 600, без вывода значений. Существующий файл сохраняется
+побайтно. Затем устанавливает pinned frontend tools/deps и запускает PostgreSQL/
+Mailpit. Makefile не исполняет `.env` как shell-код: значения читает Compose.
+`run` запускает контейнер приложения; host JAR остаётся доступен вручную ниже.
+
+| Команда | Семантика |
+| --- | --- |
+| `make help` | Справка, без создания env и запуска сервисов |
+| `make env-file` | Создать приватный env, если его нет; не перезаписывать существующий |
+| `make setup` | Env + frontend dependencies + healthy PostgreSQL/Mailpit |
+| `make up` | Env + healthy PostgreSQL/Mailpit, без приложения |
+| `make run` | Env + локальная сборка/запуск app и сервисов с ожиданием readiness |
+| `make down` | Остановить stack, сохранив PostgreSQL volumes и книги |
+| `make logs` | Следить за логами; выход через Ctrl+C, данные могут быть приватными |
+| `make build` | Frontend checks + executable JAR, без запуска Java-тестов |
+| `make typecheck` | Pinned frontend install + strict tsc |
+| `make lint` | Pinned frontend install + ESLint |
+| `make test` | Frontend checks и изолированные Java-тесты без Docker |
+| `make test-integration` | Обычные проверки + disposable PostgreSQL/Mailpit IT |
+| `make check` | Clean verify: typecheck → lint → bundles → Java tests → JAR |
+| `make secret-check` | Scanner fixtures и staged changes; CI использует `SECRET_MODE=snapshot` |
+| `make clean` | Только Maven target; env, node_modules, БД и книги сохраняются |
+
+`check` возвращает ненулевой код при первом отказе; Maven/POM задаёт порядок
+проверок. Makefile не допускает параллельное выполнение целей. Разрушительных
+команд удаления пользовательских данных нет, volumes никогда не удаляются.
+CI запускает те же `make check` и `make secret-check SECRET_MODE=snapshot`;
+Docker IT остаются отдельной opt-in командой, остальные CI gates — задача #20.
+
+Для собственного изолированного окружения можно задать
+`PROJECT_NAME=... ENV_FILE=/path/to/private.env`. Порты меняются в env как описано
+ниже. Храните альтернативный env вне Git либо под игнорируемым `.env.*` именем.
+`MAVEN_ARGS` поддерживает локальные Maven options (например собственный cache);
+не передавайте через CLI credentials. Команд публикации/деплоя в Makefile нет.
 
 ## Docker для локальной разработки
 
