@@ -146,9 +146,15 @@ Webpack собирался с предупреждением об отсутст
 
 Без PostgreSQL используйте `./mvnw spring-boot:test-run@local`: это H2 preset
 с профилем `test`, а не runtime-профиль `local`. Обычный JAR требует явного выбора
-ровно одного профиля `local`/`production`, DB credentials и готовой схемы PostgreSQL.
+ровно одного профиля `local`/`production`, DB credentials и локальной PostgreSQL.
 `dev` и неявный выбор профиля больше не поддерживаются. В runtime используется
-`ddl-auto=validate`; миграции ещё требуют #11. Не обходите отказ включением `update`.
+Flyway применяет `main/resources/db/migration/V*.sql`, затем Hibernate выполняет
+`ddl-auto=validate`. Историю миграций не переписывайте; clean, auto-baseline,
+отдельный datasource Flyway и изменение его locations запрещены runtime guard.
+Правила схемы/восстановления — `docs/database.md`. Не включайте `update`.
+`./mvnw -Ppostgres-it clean verify` запускает JPA/migration contract checks
+на disposable PostgreSQL17 (Docker обязателен); тесты `*IT` не входят в обычный
+быстрый запуск. H2 использует `spring.flyway.enabled=false` и create-drop.
 
 `local` и `production` направляют почту только в Mailpit (loopback или `mailpit`),
 SMTP auth выключена; контейнер и отправка тестового письма ещё требуют #13.

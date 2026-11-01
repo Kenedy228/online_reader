@@ -80,7 +80,9 @@ class RuntimeProfilesTest {
             "server.tomcat.connection-timeout=-1s", "spring.servlet.multipart.max-request-size=1B",
             "online-reader.storage.root=relative", "spring.jpa.hibernate.ddl-auto=update",
             "spring.jpa.generate-ddl=true", "spring.sql.init.mode=always",
-            "spring.mail.protocol=smtps",
+            "spring.mail.protocol=smtps", "spring.flyway.enabled=false",
+            "spring.flyway.clean-disabled=false", "spring.flyway.baseline-on-migrate=true",
+            "spring.flyway.validate-on-migrate=false", "spring.flyway.locations=filesystem:/tmp/unsafe",
             "spring.h2.console.enabled=true", "debug=true", "trace=true",
             "spring.jpa.show-sql=true", "logging.level.org.hibernate.SQL=DEBUG", "server.error.include-stacktrace=always"})
     void rejectsInvalidProductionOverridesWithoutEchoingValues(String override) {
@@ -99,7 +101,8 @@ class RuntimeProfilesTest {
             "spring.jpa.properties.hibernate.hbm2ddl.auto",
             "spring.jpa.properties.jakarta.persistence.schema-generation.database.action",
             "SPRING_DATASOURCE_HIKARI_JDBCURL", "SPRING_DATASOURCE_JNDINAME",
-            "SPRING_MAIL_JNDINAME", "SPRING_DATASOURCE_HIKARI_DATASOURCEPROPERTIES_INIT"})
+            "SPRING_MAIL_JNDINAME", "spring.flyway.url", "spring.flyway.user",
+            "spring.flyway.password", "spring.flyway.schemas", "SPRING_DATASOURCE_HIKARI_DATASOURCEPROPERTIES_INIT"})
     void rejectsAlternateConnectionAndSchemaSettings(String key) {
         for (String profile : new String[]{"test", "local", "production"}) {
             var settings = production();
