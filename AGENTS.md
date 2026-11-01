@@ -46,6 +46,16 @@ SvelteKit-стеком Wiki. Не мигрируйте на SvelteKit, React, о
 версии вне сборки: `pom.xml` закрепляет Java release 21 и Spring Boot 3.5.16,
 Maven Wrapper — Maven 3.9.16. Поддерживаемый JDK для сборки: 21–25.
 
+## Текущий контракт входа
+
+GET `/login` создаёт свежий model attribute `user`, query credentials не привязываются.
+POST `/login` выполняет DTO binding/Bean Validation с включённым CSRF. Перед ответом
+пароль удаляется из DTO и password rejectedValue в view BindingResult; username
+сохраняется в форме, его HTML-вывод экранируется Thymeleaf. Связанные ошибки доступны через aria-describedby.
+Валидный ввод пока перенаправляет на `/` без аутентификации: проверка аккаунта,
+создание security context и auth redirects относятся к #14. Не считайте этот
+placeholder безопасным реализованным входом и не отключайте CSRF для его работы.
+
 ## Структура и ответственность
 
 | Каталог | Назначение |
