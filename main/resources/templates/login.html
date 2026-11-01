@@ -5,11 +5,11 @@
     <meta name="description" content="Курсовая работа студентов группы БО231ИСТ Журавлева Д.В. и Наумова С.А. по дисциплине информационные WEB-системы." />
     <meta name="author" content="Журавлев Д.В. и Наумов С.А." />
     <meta name="viewport"
-          content="width=device-width, usescalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+          content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <link rel="stylesheet" type="text/css" th:href="@{styles/styles.css}"/>
-    <link rel="stylesheet" type="text/css" th:href="@{styles/header.css}" />
-    <link rel="stylesheet" type="text/css" th:href="@{styles/login.css}" />
+    <link rel="stylesheet" type="text/css" th:href="@{/styles/styles.css}"/>
+    <link rel="stylesheet" type="text/css" th:href="@{/styles/header.css}" />
+    <link rel="stylesheet" type="text/css" th:href="@{/styles/login.css}" />
 
     <title>ДостоRead - вход в аккаунт</title>
 </head>
@@ -20,24 +20,26 @@
     <div class="main-container">
         <h1 th:text="${pageTitle}"></h1>
 
-        <form class="login-form" method="post" th:action="@{/login}" th:object="${user}">
-            <label for="username">Имя пользователя: <input type="text" name="username" id="username" th:field="*{username}"/></label>
-            <p th:if="${#fields.hasErrors('username')}" th:errors="*{username}" th:errorclass="err_text"></p>
+        <form class="login-form" method="post" th:action="@{/login}" th:object="${user}" novalidate>
+            <label for="username">Имя пользователя: <input type="text" name="username" id="username" th:field="*{username}" autocomplete="username" required
+                th:attr="aria-invalid=${#fields.hasErrors('username')},aria-describedby=${#fields.hasErrors('username') ? 'username-error' : null}"/></label>
+            <p id="username-error" th:if="${#fields.hasErrors('username')}" th:errors="*{username}" class="err_text" role="alert"></p>
 
-            <label for="password">Пароль: <input type="password" name="password" id="password" th:field="*{password}"/></label>
-            <p th:if="${#fields.hasErrors('password')}" th:errors="*{password}" th:errorclass="err_text" ></p>
+            <label for="password">Пароль: <input type="password" name="password" id="password" th:field="*{password}" autocomplete="current-password" required
+                th:attr="aria-invalid=${#fields.hasErrors('password')},aria-describedby=${#fields.hasErrors('password') ? 'password-error' : null}"/></label>
+            <p id="password-error" th:if="${#fields.hasErrors('password')}" th:errors="*{password}" class="err_text" role="alert"></p>
 
             <div class="show_hide_password_container">
                 <p class="show_hide_password_text">Показать пароль:</p>
-                <input src="assets/hide.png" alt="картинка показать пароль" type="image" class="show_hide_passwrd" data-status="hide"/>
+                <input th:src="@{/assets/hide.png}" alt="Показать или скрыть пароль" type="image" class="show_hide_passwrd" data-status="hide"/>
             </div>
-            <input type="submit" th:value="Войти" class="submit_btn">
-            <p class="to_registration">Если у вас нет аккаунта, <a th:href="@{registration}">зарегистрируйте</a> его прямо сейчас!</p>
+            <input type="submit" value="Войти" class="submit_btn">
+            <p class="to_registration">Если у вас нет аккаунта, <a th:href="@{/registration}">зарегистрируйте</a> его прямо сейчас!</p>
         </form>
 
     </div>
 </section>
 
-<script src="js/passwordVisibilityChangerForLogin.bundle.js" type="module"></script>
+<script th:src="@{/js/passwordVisibilityChangerForLogin.bundle.js}" type="module"></script>
 </body>
 </html>

@@ -1,8 +1,6 @@
 package com.example.online_reader.user.DTO;
 
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotEmpty;
-import jakarta.validation.constraints.NotNull;
 
 public class UserLoginDTO {
     @NotBlank(message = "Поле имя пользователя обязательно для заполнения")
@@ -21,6 +19,14 @@ public class UserLoginDTO {
 
     public String getUsername() {
         return username;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
     }
 
     public String getPassword() {

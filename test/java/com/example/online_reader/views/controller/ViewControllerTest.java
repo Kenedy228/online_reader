@@ -34,10 +34,11 @@ class ViewControllerTest {
         String view = new ViewController(new IndexService())
                 .login(credentials, errors, new ExtendedModelMap());
 
+        assertThat(credentials.getPassword()).isNull();
         assertThat(output.getAll()).doesNotContain(marker);
         if (!invalid) {
             assertThat(output.getAll()).doesNotContain(username);
         }
-        assertThat(view).isEqualTo(invalid ? "login" : "redirect:/index");
+        assertThat(view).isEqualTo(invalid ? "login" : "redirect:/");
     }
 }
