@@ -38,8 +38,11 @@ public class User {
     @Column(nullable = false)
     private Boolean enabled = true;
 
-    @Transient
-    private final RoleType role = RoleType.User;
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 16)
+    private RoleType role = RoleType.User;
+
+    public Integer getId() { return id; }
 
     public User() {
 

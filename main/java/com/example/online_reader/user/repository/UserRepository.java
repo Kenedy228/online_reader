@@ -13,8 +13,8 @@ public interface UserRepository extends JpaRepository<User, Integer> {
     @Modifying
     @Query(value = """
             INSERT INTO users(username, email, password, account_non_expired, account_non_locked,
-                              credentials_non_expired, enabled)
-            VALUES (:username, :email, :passwordHash, true, true, true, true)
+                              credentials_non_expired, enabled, role)
+            VALUES (:username, :email, :passwordHash, true, true, true, true, 'User')
             ON CONFLICT DO NOTHING
             """, nativeQuery = true)
     int insertRegisteredUser(@Param("username") String username, @Param("email") String email,

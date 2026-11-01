@@ -12,7 +12,6 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.system.CapturedOutput;
 import org.springframework.boot.test.system.OutputCaptureExtension;
-import org.springframework.context.annotation.Import;
 import org.springframework.mock.web.MockHttpSession;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -33,7 +32,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
 @TestPropertySource("classpath:application-test.properties")
-@Import(AuthRoutes.class)
 @ExtendWith(OutputCaptureExtension.class)
 class AuthenticationFlowTest {
     @Autowired MockMvc mvc;
@@ -54,7 +52,7 @@ class AuthenticationFlowTest {
 
     @Test
     void anonymousCannotUseProtectedRoutes() throws Exception {
-        var response = mvc.perform(get("/auth-test/protected")).andReturn().getResponse();
+        var response = mvc.perform(get("/unregistered")).andReturn().getResponse();
         assertThat(response.getStatus()).isEqualTo(302);
         assertThat(response.getRedirectedUrl()).endsWith("/login");
     }
@@ -72,7 +70,6 @@ class AuthenticationFlowTest {
                 context.getAuthentication().getPrincipal()).getPassword()).isNull();
         assertThat(context.getAuthentication().getAuthorities()).extracting(Object::toString)
                 .containsExactly("ROLE_USER");
-        mvc.perform(get("/auth-test/protected").session(session)).andExpect(content().string(username));
         mvc.perform(get("/login").session(session)).andExpect(redirectedUrl("/"));
         String html = mvc.perform(get("/").session(session)).andReturn().getResponse().getContentAsString();
         assertThat(html).contains(username, "action=\"/logout\"", "name=\"_csrf\"").doesNotContain(password, hash);
@@ -99,7 +96,7 @@ class AuthenticationFlowTest {
         var session = result.getRequest().getSession(false);
         assertThat(java.util.Collections.list(session.getAttributeNames()))
                 .noneMatch(name -> name.contains("SECURITY_CONTEXT") || name.contains("EXCEPTION") || name.contains("USERNAME"));
-        mvc.perform(get("/auth-test/protected").session((MockHttpSession) session))
+        mvc.perform(get("/unregistered").session((MockHttpSession) session))
                 .andExpect(status().isFound());
         assertThat(output.getAll()).doesNotContain(password, hash, "synthetic-wrong-password");
         assertThat(users.findUserByUsername(username).getPasswordHash()).isEqualTo(hash);
@@ -143,7 +140,7 @@ class AuthenticationFlowTest {
         var session = (MockHttpSession) login(username, password).getRequest().getSession();
         mvc.perform(post("/logout").session(session)).andExpect(status().isForbidden());
         mvc.perform(get("/logout").session(session));
-        mvc.perform(get("/auth-test/protected").session(session)).andExpect(status().isOk());
+        mvc.perform(get("/login").session(session)).andExpect(redirectedUrl("/"));
         var page = mvc.perform(get("/").session(session)).andReturn();
         var token = (CsrfToken) page.getRequest().getAttribute(CsrfToken.class.getName());
         mvc.perform(post("/logout").session(session).param(token.getParameterName(), token.getToken()))

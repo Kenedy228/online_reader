@@ -1,12 +1,15 @@
 # Вход и сессия
 
 `POST /login` обслуживает Spring Security formLogin, а не MVC controller.
-`JpaUserDetailsService` загружает только `users`, выдаёт `ROLE_USER` и учитывает
+`JpaUserDetailsService` загружает только `users`, выдаёт `ROLE_USER`, для Admin
+добавляет `ROLE_ADMIN` и учитывает
 `enabled`, `account_non_locked`, `account_non_expired`, `credentials_non_expired`.
 Таблица `admin` не является альтернативным способом входа. Регистрация —
 [registration.md](registration.md),
-постоянные роли, владельцы ресурсов и provisioning администратора — #17.
-Seed-аккаунтов, универсального пароля и CLI/admin-команды provisioning нет.
+роли, процедура оператора и матрица — [authorization.md](authorization.md);
+owner-проверки книжных ресурсов в #17 ещё не завершены.
+Seed-аккаунтов, универсального пароля и публичного provisioning нет; роль
+существующего users назначает только оператор БД по authorization.md.
 
 ## Пароли и отказ входа
 
@@ -94,7 +97,8 @@ V1 не изменяется. V2 транзакционно расширяет �
 
 `make check`: JPA/encoder, все статусы отказа, CSRF/logout, лимит/параллельность,
 UTF-8 границы, runtime config и настоящий HTTP Tomcat: cookie, смена ID,
-15 минут простоя, невозможность replay после logout. `make test-integration`:
+настроенные15 минут простоя через ServletContext, невозможность replay после logout.
+Фактическое ожидание истечения15 минут не выполняется. `make test-integration`:
 PostgreSQL CHECK, V1→V2 с сохранением данных и полный rollback при неизвестном
 значении; Mailpit. Проверки используют только синтетические аккаунты и disposable
 БД. H2 suite не заменяет PostgreSQL constraints; HTTPS production cookie policy

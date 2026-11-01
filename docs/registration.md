@@ -86,7 +86,8 @@ V3 добавляет `users.email varchar(254)` с UNIQUE и CHECK канони
 удаление аккаунтов или принудительная блокировка входа не используются.
 Новые HTTP-регистрации и RegistrationService обязательно требуют email;
 nullable-столбец сохраняется для legacy, БД сама не отличает старую строку от
-новой вставки сторонним SQL. Admin/email/roles provisioning не добавляются.
+новой вставки сторонним SQL. Legacy admin/email не меняются. Роль User вставляется явно; только оператор БД
+может изменить её по [authorization.md](authorization.md). Public provisioning нет.
 
 V1/V2 неизменны. Перед обновлением — backup и восстановленная отдельная копия
 по [database.md](database.md). При необходимости позже заполнить legacy email

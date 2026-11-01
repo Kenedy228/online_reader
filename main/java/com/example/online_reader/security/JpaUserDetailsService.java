@@ -19,15 +19,9 @@ public class JpaUserDetailsService implements UserDetailsService {
     @Transactional(readOnly = true)
     public UserDetails loadUserByUsername(String username) {
         var user = users.findUserByUsername(username);
-        if (user == null || !PasswordHashFormat.supports(user.getPasswordHash())) {
+        if (user == null || user.getRole() == null || !PasswordHashFormat.supports(user.getPasswordHash())) {
             throw new UsernameNotFoundException("Invalid credentials");
         }
-        // Existing users are ordinary accounts. Admin provisioning/ownership belong to #17.
-        return org.springframework.security.core.userdetails.User.withUsername(user.getUsername())
-                .password(user.getPasswordHash()).roles("USER")
-                .disabled(!Boolean.TRUE.equals(user.getEnabled()))
-                .accountLocked(!Boolean.TRUE.equals(user.getAccountNonLocked()))
-                .accountExpired(!Boolean.TRUE.equals(user.getAccountNonExpired()))
-                .credentialsExpired(!Boolean.TRUE.equals(user.getCredentialsNonExpired())).build();
+        return new AccountPrincipal(user);
     }
 }
