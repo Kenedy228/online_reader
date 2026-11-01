@@ -30,7 +30,7 @@ PostgreSQL использует официальный образ 17.11 с immut
 ## Приложение на хосте
 
 ```sh
-docker compose up -d --wait postgres
+docker compose up -d --wait postgres mailpit
 ./mvnw clean verify
 ```
 
@@ -49,8 +49,10 @@ java -jar target/online-reader-0.0.1-SNAPSHOT.jar
 например `jdbc:postgresql://127.0.0.1:5432/online_reader`; при изменении
 `POSTGRES_DB`/`POSTGRES_PORT` обновите `SPRING_DATASOURCE_URL` в `.env`.
 `SERVER_PORT` управляет портом host JAR; `APP_PORT` относится только к Compose.
-Mailpit для host JAR — `127.0.0.1:1025`, его контейнер добавляется в #13.
-Проверка SMTP при старте отключена; отправка почты до #13 не подтверждается.
+Mailpit для host JAR — `127.0.0.1:1025`, Web UI — `127.0.0.1:8025`.
+`SPRING_MAIL_PORT` меняет только host SMTP port, `MAILPIT_UI_PORT` — UI/API port.
+Проверка SMTP при старте приложения отключена, Compose проверяет readyz Mailpit.
+Spring Mail smoke и очистка писем описаны в [mail.md](mail.md).
 
 ## Приложение в Docker
 
@@ -58,7 +60,7 @@ Mailpit для host JAR — `127.0.0.1:1025`, его контейнер доба
 docker compose --profile app up -d --build --wait
 ```
 
-Профиль Compose `app` включает приложение; без него запускается только PostgreSQL.
+Профиль Compose `app` включает приложение; без него запускаются PostgreSQL и Mailpit.
 Внутри Docker приложение использует `postgres:5432` и имя БД из `POSTGRES_DB`,
 независимо от host JDBC URL. Адрес bind фиксирован `0.0.0.0:8080` внутри контейнера;
 наружу опубликован только `127.0.0.1:${APP_PORT}`. Общая конфигурация Spring Boot
@@ -73,11 +75,13 @@ Java работает как PID1 и получает SIGTERM напрямую. 
 `/tmp` — ограниченный tmpfs. Файловое хранилище книг ещё не реализовано (#22),
 volume для книг пока не создаётся.
 
-Compose ждёт TCP healthcheck PostgreSQL перед стартом приложения. Flyway поднимает
+Compose ждёт TCP healthcheck PostgreSQL и readyz Mailpit перед стартом приложения. Flyway поднимает
 пустую схему, Hibernate выполняет validate. HTTP healthcheck приложения проверяет
 главную страницу; это smoke-доступность, не полная проверка читалки или почты.
-Mailpit hostname в app container — `mailpit`; соответствующего сервиса пока нет
-до #13. Отправка письма и поведение при недоступном SMTP пока не проверены.
+Mailpit hostname в app container — `mailpit:1025`; Web UI на loopback-порту8025.
+Auth/TLS для перехватчика выключены. Spring Mail отправка, API-содержимое, очистка
+и отказ зависшего SMTP с конечным timeout проверяются `-Pmailpit-it`.
+Inbox Mailpit временный: restart/down очищают письма, PostgreSQL volume сохраняется.
 
 ## Остановка и сохранность
 
@@ -107,5 +111,5 @@ build inputs. `.git`, `.env*`, IDE, node_modules, target, локальные dum
 allowlist, сохраняя исключение секретов.
 
 По умолчанию порты служебных компонентов ограничены loopback. Не меняйте это
-окружение в конфигурацию внешнего production-сервера. Контейнер Mailpit — #13,
-Makefile — #15, интеграция полной читалки — #27.
+окружение в конфигурацию внешнего production-сервера. Makefile — #15,
+интеграция полной читалки — #27.

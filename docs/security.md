@@ -43,8 +43,10 @@ EnvironmentPostProcessor принудительно ставит эти наст
 отклоняется. Проверки не обращаются к внешним БД или SMTP.
 
 Runtime-профили `local` и `production` разрешают только локальный Mailpit,
-внешний SMTP host отклоняется. SMTP credentials не требуются. Контейнер Mailpit
-и интеграция отправки письма остаются в [#13](https://github.com/Kenedy228/online_reader/issues/13).
+внешний SMTP host и TLS/auth overrides отклоняются. SMTP credentials не требуются.
+Mailpit в Compose не имеет relay/forward конфигурации; release checks и rDNS
+выключены, порты UI/SMTP опубликованы на loopback, inbox временный.
+Проверки Spring Mail и очистка — [mail.md](mail.md).
 Параметры профилей, лимитов, путей и таймаутов — в README и `.env.example`.
 `production` предназначен для локальной проверки конфигурации, не для деплоя.
 Ошибки валидации конфигурации содержат имена ключей без введённых значений.

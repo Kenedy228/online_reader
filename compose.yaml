@@ -19,6 +19,32 @@ services:
       retries: 20
     stop_grace_period: 30s
 
+  mailpit:
+    image: axllent/mailpit:v1.33.0@sha256:9b3a463be15354c0f0eba91697d80e3e0d8a5623ef0e627cacc836bc17fd5231
+    user: "10001:10001"
+    environment:
+      MP_DISABLE_VERSION_CHECK: "true"
+      MP_SMTP_DISABLE_RDNS: "true"
+      MP_SMTP_RELAY_ALL: "false"
+      MP_BLOCK_REMOTE_CSS_AND_FONTS: "true"
+      MP_ALLOWED_HOSTS: localhost,127.0.0.1,mailpit
+      MP_MAX_MESSAGES: "100"
+    ports:
+      - "127.0.0.1:${SPRING_MAIL_PORT:-1025}:1025"
+      - "127.0.0.1:${MAILPIT_UI_PORT:-8025}:8025"
+    healthcheck:
+      test: ["CMD", "/mailpit", "readyz"]
+      interval: 3s
+      timeout: 3s
+      start_period: 5s
+      retries: 20
+    read_only: true
+    tmpfs:
+      - /tmp:rw,nosuid,nodev,size=128m,mode=1777
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    stop_grace_period: 15s
+
   app:
     profiles: [app]
     image: online-reader:local
@@ -27,6 +53,8 @@ services:
       dockerfile: Dockerfile
     depends_on:
       postgres:
+        condition: service_healthy
+      mailpit:
         condition: service_healthy
     environment:
       SPRING_PROFILES_ACTIVE: local

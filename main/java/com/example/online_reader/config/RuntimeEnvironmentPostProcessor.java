@@ -80,6 +80,9 @@ public final class RuntimeEnvironmentPostProcessor implements EnvironmentPostPro
         number(environment, "spring.mail.port", 1, 65535);
         expected(environment, "spring.mail.protocol", "smtp");
         expected(environment, "spring.mail.properties.mail.smtp.auth", "false");
+        expected(environment, "spring.mail.properties.mail.smtp.ssl.enable", "false");
+        expected(environment, "spring.mail.properties.mail.smtp.starttls.enable", "false");
+        expected(environment, "spring.mail.properties.mail.smtp.starttls.required", "false");
         for (String timeout : new String[]{"connectiontimeout", "timeout", "writetimeout"}) {
             number(environment, "spring.mail.properties.mail.smtp." + timeout, 1, Integer.MAX_VALUE);
         }

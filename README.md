@@ -92,10 +92,10 @@ npm run build
 
 Нужны Docker Engine и Compose v2.20+ с поддержкой `up --wait` и BuildKit.
 Создайте приватный `.env` из `.env.example`, задайте свои локальные DB credentials.
-Для запуска только PostgreSQL (приложение работает на хосте):
+Для локальных сервисов PostgreSQL и Mailpit (приложение работает на хосте):
 
 ```sh
-docker compose up -d --wait postgres
+docker compose up -d --wait postgres mailpit
 ```
 
 Для PostgreSQL и приложения в контейнере:
@@ -116,8 +116,8 @@ docker compose --profile app down
 Эта команда останавливает/удаляет контейнеры и сеть, сохраняя данные PostgreSQL.
 Не добавляйте `-v`: оно удаляет volumes. Настройка портов, host JAR launch,
 healthchecks, сохранность данных и ограничения описаны в
-[docs/local-development.md](docs/local-development.md). Mailpit-контейнер пока
-отдельная задача #13; SMTP при старте приложения не проверяется.
+[docs/local-development.md](docs/local-development.md). Mailpit UI доступен на
+`http://127.0.0.1:8025`; отправка и очистка писем — в [docs/mail.md](docs/mail.md).
 
 ## Запуск и профили
 
@@ -175,8 +175,10 @@ query-параметры (например `sslmode`) допустимы, creden
 `::1` и имя сервиса `mailpit`. Внешний SMTP host отклоняется даже при переопределении
 через окружение. SMTP auth отключена, SMTP credentials не нужны. Таймауты
 соединения/чтения/записи конечны; проверка SMTP при старте отключена, поэтому запуск
-сам по себе не подтверждает доступность Mailpit. Его контейнер и отправка тестового
-письма остаются в [#13](https://github.com/Kenedy228/online_reader/issues/13).
+сам по себе не подтверждает доступность Mailpit. Compose проверяет его readyz,
+а `./mvnw -Pmailpit-it clean verify` проверяет отправку через Spring Mail,
+содержимое письма, очистку inbox и конечный timeout при зависшем SMTP.
+Подробности — [docs/mail.md](docs/mail.md).
 
 В `.env.example` перечислены HTTP/DB/SMTP timeouts, multipart-лимиты и путь хранения.
 Лимиты должны быть положительными, request limit — не меньше file limit;
@@ -199,10 +201,8 @@ JNDI, альтернативные Hikari connection settings и прямые `s
 history. Не используйте их. Проверки секретов и правила работы с `.env` описаны
 в [docs/security.md](docs/security.md).
 
-PostgreSQL и приложение доступны через Docker Compose. Контейнер Mailpit и
-Makefile остаются в
-[#13](https://github.com/Kenedy228/online_reader/issues/13) и
-[#15](https://github.com/Kenedy228/online_reader/issues/15).
+PostgreSQL, Mailpit и приложение доступны через Docker Compose. Makefile остаётся
+в [#15](https://github.com/Kenedy228/online_reader/issues/15).
 
 ## Проверки
 
