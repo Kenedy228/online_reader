@@ -10,7 +10,7 @@ h1 {
     font-family: var(--GeorgiaFF);
 }
 
-form {
+.login-form {
     width: 100%;
     max-width: 500px;
     height: auto;
@@ -19,14 +19,14 @@ form {
     font-family: var(--GeorgiaFF);
 }
 
-label {
+.login-form label {
     display: block;
     margin-left: 10px;
     margin-top: 20px;
     font-size: 18px;
 }
 
-input {
+.login-form :where(input) {
     display: block;
     width: 100%;
     margin-top: 10px;
@@ -36,7 +36,7 @@ input {
     border-color: transparent;
 }
 
-input:focus-visible {
+.login-form input:focus-visible {
     outline: 2px solid #1649a3;
     outline-offset: 2px;
 }

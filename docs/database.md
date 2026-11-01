@@ -2,8 +2,9 @@
 
 Схемой управляет Flyway (версия из Spring Boot dependency management).
 SQL находится в `main/resources/db/migration`; V1 соответствует существующим
-User/Admin/Action и связующей таблице admin_actions. Изменение модели аккаунтов
-и ролей не входит в эту миграцию. Seed-аккаунтов и универсальных паролей нет.
+User/Admin/Action и связующей таблице admin_actions. V2 расширяет password до 255, добавляет префикс распознанным BCrypt cost12 и
+проверяет encoded-only формат обоих типов аккаунтов; роли не меняются.
+Совместимость и восстановление: [authentication.md](authentication.md). Seed-аккаунтов и универсальных паролей нет.
 
 ## Запуск и изменение схемы
 
@@ -59,7 +60,8 @@ restore вместе с файлами книг остаётся [#28](https://g
 ```
 
 Первая команда запускает изолированную H2 suite. Вторая дополнительно запускает
-`PostgresMigrationsIT` на disposable PostgreSQL17: пустая БД → V1 → Hibernate
+`PostgresMigrationsIT` на disposable PostgreSQL17: пустая БД → V1→V2 → Hibernate
 validate и JPA-запись; UNIQUE/NOT NULL/длина/FK; повторный migrate с существующей
-записью без потери данных. Используется закреплённый image digest; Docker обязателен.
+записью без потери данных; преобразование legacy BCrypt и транзакционный rollback
+при неизвестном формате пароля. Используется закреплённый image digest; Docker обязателен.
 При ошибке Docker или PostgreSQL fallback к dev/H2 отсутствует.

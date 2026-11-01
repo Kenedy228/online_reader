@@ -1,27 +1,22 @@
 <!doctype html>
-<html lang="ru" xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport"
-          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
-    <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>Document</title>
-</head>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <body>
-    <header th:fragment="header">
-        <div class="header-container">
-            <div class="header-logo">
-                <img src="assets/logo.svg" alt="Логотип ДостоRead">
-            </div>
-            <div class="header-menu">
-                <nav>
-                    <ul>
-                        <li><a th:href="@{./}">Главная</a></li>
-                        <li><a th:href="@{./login}">Вход в аккаунт</a></li>
-                    </ul>
-                </nav>
-            </div>
-        </div>
-    </header>
+<header th:fragment="header">
+    <div class="header-container">
+        <a class="header-logo" th:href="@{/}"><img th:src="@{/assets/logo.svg}" alt="ДостоRead — главная"></a>
+        <nav aria-label="Основная навигация">
+            <ul>
+                <li><a th:href="@{/}">Главная</a></li>
+                <li sec:authorize="isAnonymous()"><a th:href="@{/login}">Вход в аккаунт</a></li>
+                <li sec:authorize="isAuthenticated()"><span class="header-username" sec:authentication="name"></span></li>
+                <li sec:authorize="isAuthenticated()">
+                    <form class="header-logout" method="post" th:action="@{/logout}">
+                        <button type="submit">Выйти</button>
+                    </form>
+                </li>
+            </ul>
+        </nav>
+    </div>
+</header>
 </body>
 </html>
