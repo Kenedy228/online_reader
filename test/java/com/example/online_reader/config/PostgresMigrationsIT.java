@@ -109,7 +109,7 @@ class PostgresMigrationsIT {
         try (var connection = connection(schema)) {
             insertLegacy(connection, "users", "legacy-reader", HASH.substring(8));
             insertLegacy(connection, "admin", "legacy-admin", HASH.substring(8));
-            var upgrade = flyway(schema, null);
+            var upgrade = flyway(schema, "2");
             assertThat(upgrade.migrate().migrationsExecuted).isEqualTo(1);
             upgrade.validate();
             for (String table : new String[]{"users", "admin"}) {
@@ -131,7 +131,7 @@ class PostgresMigrationsIT {
         try (var connection = connection(schema)) {
             insertLegacy(connection, "users", "recognized", HASH.substring(8));
             insertLegacy(connection, "admin", "unsupported", "legacy-plaintext-fixture");
-            assertThatThrownBy(() -> flyway(schema, null).migrate()).isInstanceOf(org.flywaydb.core.api.FlywayException.class);
+            assertThatThrownBy(() -> flyway(schema, "2").migrate()).isInstanceOf(org.flywaydb.core.api.FlywayException.class);
             try (var statement = connection.createStatement()) {
                 for (String table : new String[]{"users", "admin"}) {
                     try (var rows = statement.executeQuery("select password from " + table)) {
@@ -147,6 +147,41 @@ class PostgresMigrationsIT {
                 try (var rows = statement.executeQuery("select count(*) from flyway_schema_history where version='2'")) {
                     rows.next();
                     assertThat(rows.getInt(1)).isZero();
+                }
+            }
+        }
+    }
+
+    @Test
+    void v3PreservesLegacyAccountsAndEnforcesNormalizedUniqueEmail() throws SQLException {
+        String schema = "email_" + UUID.randomUUID().toString().replace("-", "");
+        flyway(schema, "2").migrate();
+        try (var connection = connection(schema)) {
+            insertLegacy(connection, "users", "old-one", HASH);
+            insertLegacy(connection, "users", "old-two", HASH);
+            assertThat(flyway(schema, null).migrate().migrationsExecuted).isEqualTo(1);
+            try (var statement = connection.createStatement();
+                 var rows = statement.executeQuery("select username,password,enabled,account_non_locked,email from users order by id")) {
+                for (String name : new String[]{"old-one", "old-two"}) {
+                    assertThat(rows.next()).isTrue();
+                    assertThat(rows.getString(1)).isEqualTo(name);
+                    assertThat(rows.getString(2)).isEqualTo(HASH);
+                    assertThat(rows.getBoolean(3)).isFalse();
+                    assertThat(rows.getBoolean(4)).isFalse();
+                    assertThat(rows.getString(5)).isNull();
+                }
+                assertThat(rows.next()).isFalse();
+            }
+            try (var insert = connection.prepareStatement("insert into users(username,email,password) values (?,?,?)")) {
+                insert.setString(1, "new-one"); insert.setString(2, "reader@example.test"); insert.setString(3, HASH);
+                assertThat(insert.executeUpdate()).isEqualTo(1);
+                insert.setString(1, "new-two");
+                assertThatThrownBy(insert::executeUpdate).isInstanceOf(SQLException.class)
+                        .extracting(error -> ((SQLException) error).getSQLState()).isEqualTo("23505");
+                for (String invalid : new String[]{"READER@example.test", " reader@example.test ", ""}) {
+                    insert.setString(2, invalid);
+                    assertThatThrownBy(insert::executeUpdate).isInstanceOf(SQLException.class)
+                            .extracting(error -> ((SQLException) error).getSQLState()).isEqualTo("23514");
                 }
             }
         }
@@ -180,7 +215,7 @@ class PostgresMigrationsIT {
         Flyway flyway = Flyway.configure().dataSource(DATABASE.getJdbcUrl(),
                         DATABASE.getUsername(), DATABASE.getPassword())
                 .defaultSchema(schema).schemas(schema).cleanDisabled(true).load();
-        assertThat(flyway.migrate().migrationsExecuted).isEqualTo(2);
+        assertThat(flyway.migrate().migrationsExecuted).isEqualTo(3);
         flyway.validate();
         return flyway;
     }

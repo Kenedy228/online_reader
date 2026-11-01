@@ -1,92 +1,13 @@
-.main-2-container {
-    width: 80%;
-    margin: 0 auto;
-}
-
-h1 {
-    text-align: center;
-    margin-top: 50px;
-    font-size: 36px;
-    font-family: var(--GeorgiaFF);
-}
-
-form {
-    width: 500px;
-    height: 470px;
-    border-radius: 10px;
-    margin-top: 30px;
-    font-family: var(--GeorgiaFF);
-
-}
-
-label {
-    display: inline-block;
-    margin-left: 10px;
-    margin-top: 20px;
-    font-size: 18px;
-}
-
-input {
-    display: block;
-    width: 500px;
-    margin-top: 10px;
-    font-size: 20px;
-    background: lightgray;
-    border-radius: 5px;
-    border-color: transparent;
-}
-
-input:focus {
-    outline: none;
-}
-
-.show_hide_passwrd_container {
-    display: flex;
-    justify-content: flex-start;
-    align-items: center;
-    margin-top: 10px;
-    margin-bottom: 10px;
-}
-
-.show_hide_passwrd_text {
-    font-size: 18px;
-    text-align: center;
-    margin-left: 10px;
-    margin-right: 10px;
-}
-
-.show_hide_passwrd {
-    width: 30px;
-    height: 30px;
-    margin-left: 10px;
-    background: transparent;
-    margin-top: 0;
-}
-
-.submit_btn {
-    width: 150px;
-    font-size: 18px;
-    background: black;
-    color: white;
-    margin-top: 20px;
-}
-
-.to_login {
-    font-size: 16px;
-    margin-left: 10px;
-    margin-top: 20px;
-}
-
-.to_login > a {
-    color: black;
-}
-
-.username_err_text, .email_err_text, .password_err_text, .confirmation-password_err_text {
-    color: red;
-    font-size: 18px;
-    margin-top: 10px;
-    margin-bottom: 10px;
-    margin-left: 10px;
-    white-space: pre-wrap;
-    text-align: justify;
-}
+h1 { text-align: center; margin-top: 50px; font-size: 36px; font-family: var(--GeorgiaFF); }
+.register_form { width: 100%; max-width: 500px; height: auto; border-radius: 10px; margin-top: 30px; font-family: var(--GeorgiaFF); }
+.register_form label { display: block; margin-top: 20px; font-size: 18px; }
+.register_form :where(input) { display: block; width: 100%; margin-top: 10px; font-size: 20px; background: lightgray; border-radius: 5px; border-color: transparent; }
+.register_form input:focus-visible { outline: 2px solid #1649a3; outline-offset: 2px; }
+.register_form p { overflow-wrap: anywhere; }
+.show_hide_passwrd_container { display: flex; align-items: center; gap: 10px; margin: 10px 0; }
+.show_hide_passwrd_text { font-size: 18px; }
+.show_hide_passwrd { width: 30px; height: 30px; background: transparent; margin-top: 0; }
+.submit_btn { width: auto; max-width: 100%; font-size: 18px; background: black; color: white; margin-top: 20px; padding: 0.5rem; cursor: pointer; }
+.to_login { font-size: 16px; margin-top: 20px; }
+.to_login > a { color: black; }
+.err_text { color: #b00020; font-size: 18px; margin: 10px 0; }

@@ -2,6 +2,7 @@ package com.example.online_reader.config;
 
 import com.example.online_reader.security.LoginAttemptLimiter;
 import com.example.online_reader.security.LoginRequestFilter;
+import com.example.online_reader.security.RegistrationRequestFilter;
 import jakarta.servlet.DispatcherType;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.convert.DurationStyle;
@@ -40,7 +41,10 @@ public class SecurityConfig {
 
     @Bean
     SecurityFilterChain securityFilterChain(HttpSecurity http, AuthenticationManager authentication,
-                                            LoginAttemptLimiter limiter) throws Exception {
+                                            LoginAttemptLimiter limiter,
+                                            @Value("${online-reader.registration.max-attempts}") int registrationAttempts,
+                                            @Value("${online-reader.registration.max-clients}") int registrationClients,
+                                            @Value("${online-reader.registration.window}") String registrationWindow) throws Exception {
         http.authenticationManager(authentication)
                 .authorizeHttpRequests(rules -> rules.dispatcherTypeMatchers(DispatcherType.ERROR).permitAll()
                         .requestMatchers("/", "/login", "/registration", "/styles/**", "/assets/**", "/js/**").permitAll()
@@ -57,6 +61,9 @@ public class SecurityConfig {
                         .invalidateHttpSession(true).clearAuthentication(true).deleteCookies("JSESSIONID"));
         // Construct here, not as a Filter bean: Boot must not register it a second time outside CSRF.
         http.addFilterBefore(new LoginRequestFilter(limiter), UsernamePasswordAuthenticationFilter.class);
+        http.addFilterBefore(new RegistrationRequestFilter(new LoginAttemptLimiter(registrationAttempts,
+                registrationClients, DurationStyle.detectAndParse(registrationWindow))),
+                UsernamePasswordAuthenticationFilter.class);
         return http.build();
     }
 }

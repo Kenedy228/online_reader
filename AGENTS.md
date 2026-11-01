@@ -13,7 +13,7 @@ production-ready состоянию с проверяемыми сборкой, 
   Не добавляйте подписки, рекомендации, публичный каталог или рассылки без задачи.
 - Сейчас есть страницы главной, входа и регистрации, клиентское переключение
   видимости пароля и заготовки моделей аккаунтов. Вход через JPA/BCrypt и сессия реализованы;
-  регистрация (#16), роли/владельцы (#17) и книжные функции пока не реализованы.
+  регистрация с обязательным email реализована; роли/владельцы (#17) и книжные функции пока не реализованы.
 
 ## Приоритет инструкций и источники требований
 
@@ -58,7 +58,16 @@ logout — POST с CSRF, invalidation и удалением cookie. Rate limiter
 считает все попытки по remote address, включая успешные, с ограниченной памятью.
 Не регистрируйте его второй раз как servlet Filter bean и не доверяйте X-Forwarded-For.
 Runtime policy, ограничения и транзакционная V2: [docs/authentication.md](docs/authentication.md).
-Регистрация и роли/ownership остаются #16/#17, seed/provisioning не добавлены.
+Регистрация использует отдельный DTO/controller/service: username ASCII3–50 с учётом
+регистра, обязательный email ASCII254 trim/lowercase/UNIQUE, пароль >=15 Unicode
+code points и <=72 UTF-8 bytes, точное подтверждение. Не привязывайте entity/flags/role;
+после ошибки очищайте DTO и rejectedValue обоих паролей. Атомарный параметризованный
+INSERT ON CONFLICT DO NOTHING не обновляет existing account; не заменяйте его
+exists-then-insert. У регистрации отдельный bounded budget после CSRF.
+V3 сохраняет legacy email=NULL; новые регистрации требуют email на MVC/service
+границе. Email не подтверждён и не даёт права на восстановление/доступ.
+Контракт/ограничения: [docs/registration.md](docs/registration.md).
+Роли/ownership остаются #17, seed/admin provisioning не добавлены.
 
 ## Структура и ответственность
 
@@ -166,7 +175,7 @@ entry points JS/maps/license sidecars и сохраняет посторонни
 Правила схемы/восстановления — `docs/database.md`. Не включайте `update`.
 `./mvnw -Ppostgres-it clean verify` запускает JPA/migration contract checks
 на disposable PostgreSQL17 (Docker обязателен); тесты `*IT` не входят в обычный
-быстрый запуск. H2 использует `spring.flyway.enabled=false` и create-drop.
+быстрый запуск. H2 использует `spring.flyway.enabled=false`, create-drop и PostgreSQL mode для native registration INSERT; проверка PostgreSQL остаётся отдельной.
 
 `local` и `production` направляют почту только в Mailpit (loopback или `mailpit`),
 SMTP auth/TLS выключены; соответствующие overrides отклоняются до I/O.

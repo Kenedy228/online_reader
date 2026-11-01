@@ -4,7 +4,9 @@
 SQL находится в `main/resources/db/migration`; V1 соответствует существующим
 User/Admin/Action и связующей таблице admin_actions. V2 расширяет password до 255, добавляет префикс распознанным BCrypt cost12 и
 проверяет encoded-only формат обоих типов аккаунтов; роли не меняются.
-Совместимость и восстановление: [authentication.md](authentication.md). Seed-аккаунтов и универсальных паролей нет.
+Совместимость и восстановление: [authentication.md](authentication.md). V3 добавляет users.email: UNIQUE и канонический lowercase/trim, NULL сохраняется
+для legacy, новые регистрации требуют email через service/DTO. Правила переноса —
+[registration.md](registration.md). Seed-аккаунтов и универсальных паролей нет.
 
 ## Запуск и изменение схемы
 
@@ -60,8 +62,10 @@ restore вместе с файлами книг остаётся [#28](https://g
 ```
 
 Первая команда запускает изолированную H2 suite. Вторая дополнительно запускает
-`PostgresMigrationsIT` на disposable PostgreSQL17: пустая БД → V1→V2 → Hibernate
+`PostgresMigrationsIT` на disposable PostgreSQL17: пустая БД → V1→V2→V3 → Hibernate
 validate и JPA-запись; UNIQUE/NOT NULL/длина/FK; повторный migrate с существующей
 записью без потери данных; преобразование legacy BCrypt и транзакционный rollback
-при неизвестном формате пароля. Используется закреплённый image digest; Docker обязателен.
+при неизвестном формате пароля; V2→V3 с сохранением legacy NULL/flags/hash,
+email UNIQUE/CHECK. RegistrationPostgresIT проверяет гонки регистрации по
+username/email на настоящем сервисе/JPA и неизменность победившего аккаунта. Используется закреплённый image digest; Docker обязателен.
 При ошибке Docker или PostgreSQL fallback к dev/H2 отсутствует.

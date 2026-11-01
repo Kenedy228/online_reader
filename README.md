@@ -12,15 +12,17 @@
 | Область | Сейчас | План |
 | --- | --- | --- |
 | Главная страница | Описание проекта и задуманных функций | Актуализировать по мере реализации |
-| Аккаунты | Вход через JPA/BCrypt, сессия, CSRF logout, ограничение попыток; страница регистрации | [регистрация](https://github.com/Kenedy228/online_reader/issues/16), [права доступа](https://github.com/Kenedy228/online_reader/issues/17) |
+| Аккаунты | Регистрация с уникальными username/email, вход через JPA/BCrypt, сессия, CSRF logout и лимиты | [права доступа](https://github.com/Kenedy228/online_reader/issues/17) |
 | Личная библиотека | Не реализована | [Управление книгами](https://github.com/Kenedy228/online_reader/issues/19) |
 | Файлы книг | Загрузки и хранения нет | [Безопасная загрузка](https://github.com/Kenedy228/online_reader/issues/22) |
 | Чтение | Экран чтения отсутствует | [Читалка](https://github.com/Kenedy228/online_reader/issues/23) |
 | Прогресс и заметки | Не реализованы | [Прогресс](https://github.com/Kenedy228/online_reader/issues/25), [заметки](https://github.com/Kenedy228/online_reader/issues/26) |
 
 Вход проверяет существующий аккаунт в `users`; пароль хранится только как BCrypt
-cost12 с префиксом `{bcrypt}`. Создания аккаунтов пока нет (#16), универсального
-пароля или seed-пользователя тоже. Политика сессии, ограничения попыток и перенос
+cost12 с префиксом `{bcrypt}`. Аккаунт создаётся через `/registration` с обязательным уникальным email,
+подтверждением пароля и серверной валидацией. Универсального пароля или
+seed-пользователя нет. Email пока не подтверждается; вход выполняется по username.
+Правила, ошибки и совместимость legacy — [docs/registration.md](docs/registration.md). Политика сессии, ограничения попыток и перенос
 старых данных описаны в [docs/authentication.md](docs/authentication.md). Поддерживаемые
 форматы книг, лимиты и точные границы MVP определяются в
 [issue #4](https://github.com/Kenedy228/online_reader/issues/4).

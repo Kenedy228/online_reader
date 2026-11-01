@@ -20,6 +20,7 @@
     <div class="main-container">
         <h1 th:text="${pageTitle}"></h1>
 
+        <p th:if="${registered}" role="status">Аккаунт создан. Теперь войдите.</p>
         <p th:if="${loggedOut}" role="status">Вы вышли из аккаунта.</p>
         <form class="login-form" method="post" th:action="@{/login}">
             <p id="login-error" class="err_text" role="alert" th:if="${loginError}">Неверное имя пользователя или пароль.</p>
