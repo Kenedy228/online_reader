@@ -67,6 +67,13 @@ public final class RuntimeEnvironmentPostProcessor implements EnvironmentPostPro
         expected(environment, "spring.jpa.show-sql", "false");
         expected(environment, "logging.level.org.hibernate.SQL", "OFF");
         expected(environment, "logging.level.org.hibernate.orm.jdbc.bind", "OFF");
+        number(environment, "online-reader.registration.max-attempts", 1, 100);
+        number(environment, "online-reader.registration.max-clients", 1, 4096);
+        validate(environment, "online-reader.registration.window", value -> {
+            var window = DurationStyle.detectAndParse(value);
+            return window.compareTo(java.time.Duration.ofSeconds(1)) >= 0
+                    && window.compareTo(java.time.Duration.ofMinutes(15)) <= 0;
+        });
         number(environment, "online-reader.auth.max-attempts", 1, 100);
         number(environment, "online-reader.auth.max-clients", 1, 4096);
         validate(environment, "online-reader.auth.window", value -> {

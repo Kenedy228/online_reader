@@ -16,6 +16,13 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
+    // Nullable only for legacy accounts that predate email registration; no invented backfill.
+    @Column(unique = true, length = 254)
+    private String email;
+
+    public String getEmail() { return email; }
+    public void setEmail(String email) { this.email = email; }
+
     //user credentials
     @Column(unique = true, nullable = false, length = 50)
     private String username;

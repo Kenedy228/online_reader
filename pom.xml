@@ -219,6 +219,7 @@
                         <configuration>
                             <includes combine.children="append">
                                 <include>**/PostgresMigrationsIT.java</include>
+                                <include>**/RegistrationPostgresIT.java</include>
                             </includes>
                         </configuration>
                         <executions>

@@ -27,13 +27,9 @@ public class ViewController {
         }
         model.addAttribute("pageTitle", "Вход в аккаунт");
         model.addAttribute("loginError", request.getParameterMap().containsKey("error"));
+        model.addAttribute("registered", request.getParameterMap().containsKey("registered"));
         model.addAttribute("loggedOut", request.getParameterMap().containsKey("logout"));
         return "login";
     }
 
-    @GetMapping("/registration")
-    public String registration(Model model) {
-        model.addAttribute("pageTitle", "Регистрация аккаунта");
-        return "registration";
-    }
 }

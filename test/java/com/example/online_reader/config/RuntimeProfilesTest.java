@@ -95,6 +95,9 @@ class RuntimeProfilesTest {
             "server.servlet.session.timeout=0s", "server.servlet.session.timeout=61m",
             "server.servlet.session.persistent=true", "server.forward-headers-strategy=framework",
             "online-reader.auth.max-attempts=0", "online-reader.auth.max-attempts=101",
+            "online-reader.registration.max-attempts=0", "online-reader.registration.max-attempts=101",
+            "online-reader.registration.max-clients=0", "online-reader.registration.max-clients=4097",
+            "online-reader.registration.window=999ms", "online-reader.registration.window=16m",
             "online-reader.auth.max-clients=4097", "online-reader.auth.window=999ms",
             "online-reader.auth.window=16m", "spring.jpa.show-sql=true", "logging.level.org.hibernate.SQL=DEBUG", "server.error.include-stacktrace=always"})
     void rejectsInvalidProductionOverridesWithoutEchoingValues(String override) {
