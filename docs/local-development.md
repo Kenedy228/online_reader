@@ -6,7 +6,10 @@ Maven, Node.js и npm на хосте для Docker build не требуютс�
 
 ## Переменные и данные
 
-Создайте приватный файл: `umask 077`, затем `cp .env.example .env`.
+`make setup` создаёт приватный `.env` со случайным локальным DB password,
+если файла ещё нет, устанавливает frontend deps и запускает сервисы.
+Существующий env сохраняется; его пустые credentials нужно заполнить вручную.
+Альтернатива без Make: `umask 077`, затем `cp .env.example .env`.
 Задайте собственные локальные `SPRING_DATASOURCE_USERNAME` и
 `SPRING_DATASOURCE_PASSWORD`. Пустые credentials блокируют Compose до старта.
 Значения с `$`, `#`, пробелами и shell-символами заключайте в одинарные кавычки.
@@ -111,5 +114,5 @@ build inputs. `.git`, `.env*`, IDE, node_modules, target, локальные dum
 allowlist, сохраняя исключение секретов.
 
 По умолчанию порты служебных компонентов ограничены loopback. Не меняйте это
-окружение в конфигурацию внешнего production-сервера. Makefile — #15,
-интеграция полной читалки — #27.
+окружение в конфигурацию внешнего production-сервера. Makefile предоставляет
+setup/up/run/down/logs и проверки (полная семантика в README); читалка/E2E — #27.
