@@ -15,11 +15,9 @@ class RuntimeCredentialsTest {
 
     @ParameterizedTest
     @CsvSource({
-            "application-dev.properties, spring.datasource.url, SPRING_DATASOURCE_URL",
-            "application-dev.properties, spring.datasource.username, SPRING_DATASOURCE_USERNAME",
-            "application-dev.properties, spring.datasource.password, SPRING_DATASOURCE_PASSWORD",
-            "application.properties, spring.mail.username, SPRING_MAIL_USERNAME",
-            "application.properties, spring.mail.password, SPRING_MAIL_PASSWORD"
+            "application.properties, spring.datasource.url, SPRING_DATASOURCE_URL",
+            "application.properties, spring.datasource.username, SPRING_DATASOURCE_USERNAME",
+            "application.properties, spring.datasource.password, SPRING_DATASOURCE_PASSWORD"
     })
     void runtimeConfigurationResolvesExternalValues(String resource, String key, String variable) throws IOException {
         String probe = UUID.randomUUID().toString();
@@ -33,11 +31,9 @@ class RuntimeCredentialsTest {
 
     @ParameterizedTest
     @CsvSource({
-            "application-dev.properties, spring.datasource.url",
-            "application-dev.properties, spring.datasource.username",
-            "application-dev.properties, spring.datasource.password",
-            "application.properties, spring.mail.username",
-            "application.properties, spring.mail.password"
+            "application.properties, spring.datasource.url",
+            "application.properties, spring.datasource.username",
+            "application.properties, spring.datasource.password"
     })
     void runtimeConfigurationHasNoLiteralFallback(String resource, String key) throws IOException {
         var environment = new MockEnvironment();

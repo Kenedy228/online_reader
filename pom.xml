@@ -168,18 +168,6 @@
                         <configuration>
                             <arguments>
                                 <argument>--spring.profiles.active=test</argument>
-                                <argument>--spring.datasource.url=jdbc:h2:mem:online_reader_local;DB_CLOSE_DELAY=-1</argument>
-                                <argument>--spring.datasource.driver-class-name=org.h2.Driver</argument>
-                                <argument>--spring.datasource.username=sa</argument>
-                                <argument>--spring.datasource.password=</argument>
-                                <argument>--spring.jpa.hibernate.ddl-auto=create-drop</argument>
-                                <argument>--spring.h2.console.enabled=false</argument>
-                                <argument>--spring.mail.host=127.0.0.1</argument>
-                                <argument>--spring.mail.port=1025</argument>
-                                <argument>--spring.mail.username=</argument>
-                                <argument>--spring.mail.password=</argument>
-                                <argument>--spring.mail.test-connection=false</argument>
-                                <argument>--server.address=127.0.0.1</argument>
                             </arguments>
                         </configuration>
                     </execution>
