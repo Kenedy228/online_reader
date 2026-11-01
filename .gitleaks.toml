@@ -1,0 +1,44 @@
+title = "DostoRead secret checks"
+
+[extend]
+useDefault = true
+
+[[allowlists]]
+regexTarget = "secret"
+regexes = ['''^\$\{[A-Z][A-Z0-9_]*\}$''']
+
+[[rules]]
+id = "spring-runtime-credentials"
+description = "Spring credential assignments must use environment references"
+path = '''(^|/)application(?:-[^/]+)?\.properties$'''
+regex = '''(?im)^[\t ]*spring\.(?:datasource|mail)\.(?:username|password)[\t ]*[:=][\t ]*(\S+)'''
+secretGroup = 1
+
+[[rules.allowlists]]
+condition = "AND"
+paths = ['''(^|/)(?:main|test)/resources/application-test\.properties$''']
+regexTarget = "match"
+regexes = ['''^[\t ]*spring\.datasource\.(?:username[\t ]*=[\t ]*sa|password[\t ]*=[\t ]*password)[\t ]*$''']
+
+[[rules]]
+id = "spring-whitespace-credentials"
+description = "Detect credentials with Java Properties whitespace separators"
+path = '''(^|/)application(?:-[^/]+)?\.properties$'''
+regex = '''(?im)^[\t ]*spring\.(?:datasource|mail)\.(?:username|password)[\t ]+([^:=\s]\S*)'''
+secretGroup = 1
+
+[[rules.allowlists]]
+condition = "AND"
+paths = ['''(^|/)(?:main|test)/resources/application-test\.properties$''']
+regexTarget = "match"
+regexes = ['''^[\t ]*spring\.datasource\.(?:username[\t ]+sa|password[\t ]+password)[\t ]*$''']
+
+[[rules]]
+id = "spring-environment-credentials"
+description = "Do not commit nonempty Spring credential environment assignments"
+regex = '''(?m)^[\t ]*(?:export[\t ]+)?SPRING_(?:DATASOURCE|MAIL)_(?:USERNAME|PASSWORD)[\t ]*=[\t ]*(\S+)'''
+secretGroup = 1
+
+[[rules.allowlists]]
+regexTarget = "secret"
+regexes = ['''^(?:""|'')$''']

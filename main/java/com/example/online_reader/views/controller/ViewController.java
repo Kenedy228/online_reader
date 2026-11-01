@@ -40,8 +40,6 @@ public class ViewController {
 
     @PostMapping("/login")
     public String login(@Valid @ModelAttribute("user") UserLoginDTO userLoginDTO, BindingResult bindingResult, Model model) {
-        System.out.println(userLoginDTO.getUsername());
-        System.out.println(userLoginDTO.getPassword());
         if (bindingResult.hasErrors()) {
             model.addAttribute("pageTitle", "Вход в аккаунт");
             return "login";
