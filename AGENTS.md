@@ -85,10 +85,10 @@ wrappers или зависимости без текущей ответстве�
   не проверяйте работоспособность. Отзыв выполняет владелец; удаление из текущих
   файлов и зелёный CI не заменяют подтверждённую ротацию.
 - Не обращайтесь к внешним SMTP/БД ради проверки. Для тестов нужны изолированная
-  БД и локальный перехватчик почты. Compose, Mailpit и Makefile запланированы в
-  [#9](https://github.com/Kenedy228/online_reader/issues/9),
+  БД и локальный перехватчик почты. `compose.yaml` предоставляет PostgreSQL и
+  приложение (opt-in профиль `app`). Mailpit и Makefile ещё требуют
   [#13](https://github.com/Kenedy228/online_reader/issues/13) и
-  [#15](https://github.com/Kenedy228/online_reader/issues/15); сейчас их нет.
+  [#15](https://github.com/Kenedy228/online_reader/issues/15).
 - Проверяйте внешние данные на сервере: тип, длину, формат, диапазон и бизнес-правила.
   Для файлов ограничивайте размер, формат, ресурсы обработки и место хранения.
 - Для защищённых действий проверяйте сессию, роль и владельца ресурса на сервере.
@@ -166,6 +166,27 @@ JNDI, альтернативные Hikari connection settings и `spring.jpa.pro
 отклоняются во всех профилях; не обходите основной datasource/DDL-контракт.
 Не возвращайте общий `spring.profiles.active`, packaged test properties,
 H2 console, debug/trace, SQL logging или раскрытие ошибок клиенту.
+
+## Локальные контейнеры
+
+`docker compose up -d --wait postgres` запускает БД для host JAR.
+`docker compose --profile app up -d --build --wait` собирает и запускает приложение
+после healthy PostgreSQL. Private `.env` содержит локальные DB credentials;
+Compose читает его для подстановки, Spring Boot на хосте требует явного экспорта.
+Контракт портов/переменных/остановки — `docs/local-development.md`.
+
+`docker compose --profile app down` сохраняет PostgreSQL volume. Не применяйте
+`down -v`, `volume prune` или глобальную очистку к пользовательским данным.
+Для проверок создавайте уникальный Compose project с синтетическими credentials;
+удаляйте только собственные disposable-контейнеры/volumes с проверенными labels.
+Не публикуйте `docker compose config` или `docker inspect` с runtime env.
+
+Dockerfile использует pinned official JDK/JRE21 images; Maven Wrapper, Node/npm
+и обычные тесты выполняются в build stage. `unzip` нужен для ZIP checksum Wrapper.
+Runtime — UID/GID10001, Java PID1, read-only filesystem и tmpfs `/tmp`.
+`.dockerignore` работает по allowlist; новые build inputs добавляйте явно.
+Env-файлы, credentials, `.git`, локальные caches и результаты сборки не входят
+в context. Build args для секретов не добавляйте. Публикация образов/деплой вне scope.
 
 ## Проверка изменений и приёмка
 
