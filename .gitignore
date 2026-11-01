@@ -1,0 +1,36 @@
+# Dependencies and package-manager caches
+node_modules/
+.npm/
+
+# Java and frontend build outputs
+target/
+build/
+dist/
+out/
+.gradle/
+*.class
+/main/resources/static/js/*.bundle.js
+/main/resources/static/js/*.bundle.js.map
+/main/resources/static/js/*.bundle.js.LICENSE.txt
+
+# Local credentials; keep the distributable template visible
+.env
+.env.*
+*.env
+!.env.example
+
+# IDE metadata
+.idea/
+.vscode/
+*.iml
+
+# Logs and temporary files
+*.log
+*.tmp
+*.swp
+*.swo
+*~
+
+# OS metadata
+.DS_Store
+Thumbs.db
