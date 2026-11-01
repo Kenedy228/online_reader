@@ -12,7 +12,7 @@
 | Область | Сейчас | План |
 | --- | --- | --- |
 | Главная страница | Описание проекта и задуманных функций | Актуализировать по мере реализации |
-| Аккаунты | Регистрация с уникальными username/email, вход через JPA/BCrypt, сессия, CSRF logout и лимиты | [права доступа](https://github.com/Kenedy228/online_reader/issues/17) |
+| Аккаунты | Регистрация с уникальными username/email, вход через JPA/BCrypt, сессия, CSRF logout и лимиты | Роли User/Admin готовы; [владение ресурсами](https://github.com/Kenedy228/online_reader/issues/17) остаётся в работе |
 | Личная библиотека | Не реализована | [Управление книгами](https://github.com/Kenedy228/online_reader/issues/19) |
 | Файлы книг | Загрузки и хранения нет | [Безопасная загрузка](https://github.com/Kenedy228/online_reader/issues/22) |
 | Чтение | Экран чтения отсутствует | [Читалка](https://github.com/Kenedy228/online_reader/issues/23) |
@@ -253,7 +253,9 @@ stack trace, сообщение исключения и binding errors. Попы
 JNDI, альтернативные Hikari connection settings и прямые `spring.jpa.properties.*`
 не поддерживаются: они обходят основной datasource или правила схемы и отклоняются
 во всех профилях. Из Hikari overrides допускаются два документированных таймаута.
-Аутентификация использует JPA и сессию; роли/владельцы ресурсов остаются #17.
+Аутентификация использует JPA и сессию; роли сохраняются в users, admin requests
+проверяют актуальные права. Матрица, процедура назначения и оставшиеся owner-проверки
+#17 — [docs/authorization.md](docs/authorization.md).
 Session timeout, cookie policy и `LOGIN_*` — [docs/authentication.md](docs/authentication.md).
 
 Опубликованные ранее DB/SMTP credentials отозваны или заменены владельцем

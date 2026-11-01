@@ -1,6 +1,9 @@
 package com.example.online_reader.config;
 
 import com.example.online_reader.security.LoginAttemptLimiter;
+import com.example.online_reader.security.AdminAccessPolicy;
+import org.springframework.http.HttpMethod;
+import org.springframework.security.authorization.AuthorizationDecision;
 import com.example.online_reader.security.LoginRequestFilter;
 import com.example.online_reader.security.RegistrationRequestFilter;
 import jakarta.servlet.DispatcherType;
@@ -21,6 +24,14 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 
 @Configuration(proxyBeanMethods = false)
 public class SecurityConfig {
+    // Only application-owned resources are public; never expose a whole static directory.
+    private static final String[] PUBLIC_RESOURCES = {
+            "/assets/goal.png", "/assets/hide.png", "/assets/logo.svg", "/assets/show.png",
+            "/styles/footer.css", "/styles/header.css", "/styles/index.css", "/styles/login.css",
+            "/styles/registration.css", "/styles/styles.css",
+            "/js/passwordVisibilityChangerForLogin.bundle.js",
+            "/js/passwordVisibilityChangerForRegistration.bundle.js"
+    };
     @Bean
     AuthenticationManager authenticationManager(UserDetailsService users, PasswordEncoder encoder) {
         var provider = new DaoAuthenticationProvider(users);
@@ -41,14 +52,20 @@ public class SecurityConfig {
 
     @Bean
     SecurityFilterChain securityFilterChain(HttpSecurity http, AuthenticationManager authentication,
-                                            LoginAttemptLimiter limiter,
+                                            LoginAttemptLimiter limiter, AdminAccessPolicy adminAccess,
                                             @Value("${online-reader.registration.max-attempts}") int registrationAttempts,
                                             @Value("${online-reader.registration.max-clients}") int registrationClients,
                                             @Value("${online-reader.registration.window}") String registrationWindow) throws Exception {
         http.authenticationManager(authentication)
                 .authorizeHttpRequests(rules -> rules.dispatcherTypeMatchers(DispatcherType.ERROR).permitAll()
-                        .requestMatchers("/", "/login", "/registration", "/styles/**", "/assets/**", "/js/**").permitAll()
-                        .anyRequest().authenticated())
+                        .requestMatchers(HttpMethod.GET, "/", "/login", "/registration").permitAll()
+                        .requestMatchers(HttpMethod.HEAD, "/", "/login", "/registration").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/login", "/registration").permitAll()
+                        .requestMatchers(HttpMethod.GET, PUBLIC_RESOURCES).permitAll()
+                        .requestMatchers(HttpMethod.HEAD, PUBLIC_RESOURCES).permitAll()
+                        .requestMatchers("/admin/**").access((auth, context) ->
+                                new AuthorizationDecision(adminAccess.isAllowed(auth.get())))
+                        .anyRequest().denyAll())
                 .requestCache(cache -> cache.disable())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
                         .sessionFixation(fixation -> fixation.changeSessionId()))

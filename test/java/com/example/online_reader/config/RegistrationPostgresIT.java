@@ -6,6 +6,7 @@ import com.example.online_reader.user.repository.UserRepository;
 import com.example.online_reader.user.service.RegistrationService;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.boot.SpringApplication;
@@ -99,6 +100,41 @@ class RegistrationPostgresIT {
             // A conflict is a normal result, not an aborted transaction poisoning later registrations.
             assertThat(service.register(form("unrelated"))).isTrue();
         }
+    }
+
+    @Test
+    void registrationExplicitlyCreatesUserEvenIfDatabaseDefaultWasChanged() {
+        var jdbc = context.getBean(JdbcTemplate.class);
+        jdbc.execute("alter table users alter column role set default 'Admin'");
+        try {
+            var form = form("default-policy");
+            assertThat(context.getBean(RegistrationService.class).register(form)).isTrue();
+            assertThat(context.getBean(UserRepository.class).findUserByUsername(form.getUsername()).getRole().name())
+                    .isEqualTo("User");
+        } finally {
+            jdbc.execute("alter table users alter column role set default 'User'");
+        }
+    }
+
+    @Test
+    void realProviderReadsPersistedRoleAndLivePolicyRejectsRevokedSession() {
+        var form = form("role-policy");
+        context.getBean(RegistrationService.class).register(form);
+        var account = context.getBean(UserRepository.class).findUserByUsername(form.getUsername());
+        var jdbc = context.getBean(JdbcTemplate.class);
+        jdbc.update("update users set role='Admin' where id=?", account.getId());
+        var authentication = context.getBean(org.springframework.security.authentication.AuthenticationManager.class)
+                .authenticate(new org.springframework.security.authentication.UsernamePasswordAuthenticationToken(
+                        form.getUsername(), form.getPassword()));
+        assertThat(authentication.getAuthorities()).extracting(Object::toString)
+                .containsExactlyInAnyOrder("ROLE_USER", "ROLE_ADMIN");
+        var principal = (com.example.online_reader.security.AccountPrincipal) authentication.getPrincipal();
+        assertThat(principal.getAccountId()).isEqualTo(account.getId());
+        assertThat(principal.getPassword()).isNull();
+        var policy = context.getBean(com.example.online_reader.security.AdminAccessPolicy.class);
+        assertThat(policy.isAllowed(authentication)).isTrue();
+        jdbc.update("update users set role='User' where id=?", account.getId());
+        assertThat(policy.isAllowed(authentication)).isFalse();
     }
 
     private static RegistrationForm form(String suffix) {

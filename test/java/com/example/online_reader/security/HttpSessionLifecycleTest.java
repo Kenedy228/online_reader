@@ -6,7 +6,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
-import org.springframework.context.annotation.Import;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
@@ -27,11 +26,11 @@ import static org.assertj.core.api.Assertions.*;
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("test")
 @TestPropertySource("classpath:application-test.properties")
-@Import(AuthRoutes.class)
 class HttpSessionLifecycleTest {
     @LocalServerPort int port;
     @Autowired UserRepository users;
     @Autowired PasswordEncoder encoder;
+    @Autowired org.springframework.boot.web.servlet.context.ServletWebServerApplicationContext webContext;
 
     @Test
     void realContainerRotatesSessionAndLogoutKillsReplay() throws Exception {
@@ -45,15 +44,14 @@ class HttpSessionLifecycleTest {
         String header = page.headers().firstValue("Set-Cookie").orElseThrow();
         assertThat(header).contains("JSESSIONID=", "HttpOnly", "SameSite=Lax").doesNotContain("Secure", "Max-Age");
         String before = sessionId(cookies);
-        assertThat(send(client, "GET", "/auth-test/timeout", null, null).statusCode()).isEqualTo(302);
+        assertThat(webContext.getServletContext().getSessionTimeout()).isEqualTo(15);
         var login = send(client, "POST", "/login", "_csrf=" + csrf(page.body()) + "&username=" + username
                 + "&password=synthetic-http-password", null);
         assertThat(login.statusCode()).isEqualTo(302);
         assertThat(login.headers().firstValue("Location").orElseThrow()).endsWith("/");
         String after = sessionId(cookies);
         assertThat(after).isNotEqualTo(before);
-        assertThat(send(client, "GET", "/auth-test/protected", null, null).body()).isEqualTo(username);
-        assertThat(send(client, "GET", "/auth-test/timeout", null, null).body()).isEqualTo("900");
+        assertThat(send(client, "GET", "/login", null, null).statusCode()).isEqualTo(302);
         assertThat(send(client, "POST", "/logout", "", null).statusCode()).isEqualTo(403);
         var authenticated = send(client, "GET", "/", null, null);
         assertThat(authenticated.body()).contains(username, "action=\"/logout\"").doesNotContain(";jsessionid");
@@ -61,9 +59,9 @@ class HttpSessionLifecycleTest {
         assertThat(logout.statusCode()).isEqualTo(302);
         assertThat(logout.headers().allValues("Set-Cookie")).anyMatch(value -> value.contains("Max-Age=0"));
         var replay = HttpClient.newBuilder().followRedirects(HttpClient.Redirect.NEVER).build();
-        assertThat(send(replay, "GET", "/auth-test/protected", null, "JSESSIONID=" + after).statusCode()).isEqualTo(302);
-        assertThat(send(replay, "GET", "/auth-test/protected", null, "JSESSIONID=" + before).statusCode()).isEqualTo(302);
-        assertThat(send(client, "GET", "/auth-test/protected", null, null).statusCode()).isEqualTo(302);
+        assertThat(send(replay, "GET", "/login", null, "JSESSIONID=" + after).statusCode()).isEqualTo(200);
+        assertThat(send(replay, "GET", "/login", null, "JSESSIONID=" + before).statusCode()).isEqualTo(200);
+        assertThat(send(client, "GET", "/login", null, null).statusCode()).isEqualTo(200);
     }
 
     private HttpResponse<String> send(HttpClient client, String method, String path, String form, String cookie)

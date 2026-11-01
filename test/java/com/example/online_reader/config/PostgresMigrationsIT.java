@@ -159,7 +159,7 @@ class PostgresMigrationsIT {
         try (var connection = connection(schema)) {
             insertLegacy(connection, "users", "old-one", HASH);
             insertLegacy(connection, "users", "old-two", HASH);
-            assertThat(flyway(schema, null).migrate().migrationsExecuted).isEqualTo(1);
+            assertThat(flyway(schema, "3").migrate().migrationsExecuted).isEqualTo(1);
             try (var statement = connection.createStatement();
                  var rows = statement.executeQuery("select username,password,enabled,account_non_locked,email from users order by id")) {
                 for (String name : new String[]{"old-one", "old-two"}) {
@@ -183,6 +183,51 @@ class PostgresMigrationsIT {
                     assertThatThrownBy(insert::executeUpdate).isInstanceOf(SQLException.class)
                             .extracting(error -> ((SQLException) error).getSQLState()).isEqualTo("23514");
                 }
+            }
+        }
+    }
+
+    @Test
+    void v4PreservesAccountsAndLegacyLinksWithoutPromotingAnyone() throws SQLException {
+        String schema = "roles_" + UUID.randomUUID().toString().replace("-", "");
+        flyway(schema, "3").migrate();
+        try (var connection = connection(schema)) {
+            insertLegacy(connection, "users", "same-name", HASH);
+            insertLegacy(connection, "admin", "same-name", HASH);
+            try (var statement = connection.createStatement()) {
+                statement.executeUpdate("insert into actions(id,label,description) values(1,'Read','legacy-fixture')");
+                statement.executeUpdate("insert into admin_actions select id,1 from admin");
+            }
+            assertThat(flyway(schema, null).migrate().migrationsExecuted).isEqualTo(1);
+            try (var statement = connection.createStatement();
+                 var rows = statement.executeQuery("select username,password,enabled,account_non_locked,email,role from users")) {
+                assertThat(rows.next()).isTrue();
+                assertThat(rows.getString(1)).isEqualTo("same-name");
+                assertThat(rows.getString(2)).isEqualTo(HASH);
+                assertThat(rows.getBoolean(3)).isFalse();
+                assertThat(rows.getBoolean(4)).isFalse();
+                assertThat(rows.getString(5)).isNull();
+                assertThat(rows.getString(6)).isEqualTo("User");
+                assertThat(rows.next()).isFalse();
+            }
+            try (var statement = connection.createStatement();
+                 var rows = statement.executeQuery("select count(*) from admin a join admin_actions aa on a.id=aa.admin_id "
+                         + "join actions x on x.id=aa.action_id where a.login='same-name' and x.label='Read'")) {
+                rows.next(); assertThat(rows.getInt(1)).isEqualTo(1);
+            }
+            try (var update = connection.prepareStatement("update users set role=? where username='same-name'")) {
+                update.setString(1, "Root");
+                assertThatThrownBy(update::executeUpdate).isInstanceOf(SQLException.class)
+                        .extracting(error -> ((SQLException) error).getSQLState()).isEqualTo("23514");
+                update.setString(1, null);
+                assertThatThrownBy(update::executeUpdate).isInstanceOf(SQLException.class)
+                        .extracting(error -> ((SQLException) error).getSQLState()).isEqualTo("23502");
+                update.setString(1, "Admin"); assertThat(update.executeUpdate()).isEqualTo(1);
+            }
+            insertLegacy(connection, "users", "default-ordinary", HASH);
+            try (var statement = connection.createStatement();
+                 var rows = statement.executeQuery("select role from users where username='default-ordinary'")) {
+                rows.next(); assertThat(rows.getString(1)).isEqualTo("User");
             }
         }
     }
@@ -215,7 +260,7 @@ class PostgresMigrationsIT {
         Flyway flyway = Flyway.configure().dataSource(DATABASE.getJdbcUrl(),
                         DATABASE.getUsername(), DATABASE.getPassword())
                 .defaultSchema(schema).schemas(schema).cleanDisabled(true).load();
-        assertThat(flyway.migrate().migrationsExecuted).isEqualTo(3);
+        assertThat(flyway.migrate().migrationsExecuted).isEqualTo(4);
         flyway.validate();
         return flyway;
     }
