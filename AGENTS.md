@@ -110,31 +110,21 @@ Maven/plugins закреплены wrapper/parent POM; не меняйте ве�
 при отказе укажите `JAVA_HOME` на полный JDK, не снижайте Java release ради окружения.
 Makefile пока отсутствует; не выдавайте `make` за рабочую команду.
 
-Подтверждённый script в `main/frontend/package.json` — только `build`:
-
-```sh
-cd main/frontend
-npm ci
-npm run build
-```
+Frontend scripts из `main/frontend`: `build` (production, без source maps),
+`build:dev` (development с `.map`), `typecheck` (`tsc --noEmit`) и `lint`
+(ESLint/typescript-eslint recommended + prefer-const, warnings считаются отказом).
+Maven выполняет npm ci, typecheck, lint, затем Webpack: ошибки не отключайте и
+не обходите skipLibCheck ради зелёной сборки. TypeScript strict сохранён;
+moduleResolution=bundler и types=[] отражают браузерную среду, не Node.js.
+Версии lint tools закреплены package.json/lock; остальной frontend stack сохранён.
 
 Отдельный Webpack пишет bundles в `main/resources/static/js`; Maven переопределяет
-output на `target/generated-resources/static/js` и включает эти файлы в JAR.
-Bundles из исходного каталога при упаковке исключаются, чтобы не использовать
-устаревший результат. Не добавляйте зависимости или bundles через `git add -f`.
-Из корня отдельная диагностика типов после установки зависимостей:
-
-```sh
-node main/frontend/node_modules/typescript/bin/tsc --project main/frontend/tsconfig.json --noEmit
-```
-
-На исходном состоянии аудит обнаружил `TS2792: Cannot find module 'undici-types'`;
-Webpack собирался с предупреждением об отсутствии `mode` — это
-[#8](https://github.com/Kenedy228/online_reader/issues/8). Не скрывайте ошибки
-отключением проверок. Scripts `test`, `lint` и `typecheck` пока не определены;
-Зависимости `node_modules` и результаты сборки исключены через `.gitignore`;
-`package-lock.json` остаётся под Git для установки через `npm ci`
-([#5](https://github.com/Kenedy228/online_reader/issues/5)).
+output на `target/generated-resources/static/js` и включает файлы в JAR. Production
+не генерирует source maps; переключение режима удаляет только принадлежащие этим
+entry points JS/maps/license sidecars и сохраняет посторонние файлы каталога.
+Не добавляйте deps/bundles через `git add -f`; меняйте исходники и конфигурацию.
+`package-lock.json` остаётся единственным lock-файлом для npm ci.
+Отдельного JS test runner нет; не выдавайте lint/typecheck за E2E UI-проверку.
 
 **Не запускайте Java-тесты с runtime datasource.** `./mvnw test` использует `test`.
 `RuntimeEnvironmentPostProcessor` загружает `test/resources/application-test.properties`

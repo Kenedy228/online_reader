@@ -37,6 +37,7 @@ main/frontend/**
 !main/frontend/package-lock.json
 !main/frontend/tsconfig.json
 !main/frontend/webpack.config.js
+!main/frontend/eslint.config.mjs
 !main/frontend/src/
 !main/frontend/src/**
 !test/

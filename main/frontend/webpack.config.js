@@ -1,26 +1,32 @@
 const path = require('path');
 
-module.exports = {
-    entry: {
-        passwordVisibilityChangerForLogin: "./src/passwordVisibilityChanger/login/login.ts",
-        passwordVisibilityChangerForRegistration: "./src/passwordVisibilityChanger/registration/registration.ts",
-    },
-    output: {
-        filename: '[name].bundle.js', // [name] будет заменено на имя входной точки
-        path: process.env.WEBPACK_OUTPUT_PATH
-            ? path.resolve(process.env.WEBPACK_OUTPUT_PATH)
-            : path.resolve(__dirname, '../resources/static/js'),
-    },
-    resolve: {
-        extensions: ['.ts', '.js'], // Разрешаем импорт файлов с указанными расширениями
-    },
-    module: {
-        rules: [
-            {
-                test: /\.ts$/, // Обрабатываем только .ts файлы
-                use: 'ts-loader', // Используем ts-loader для компиляции TypeScript
-                exclude: /node_modules/,
-            },
-        ],
-    },
+module.exports = (_environment, argv = {}) => {
+    const mode = argv.mode || 'production';
+    if (!['production', 'development'].includes(mode)) {
+        throw new Error('Use production or development mode');
+    }
+    const entry = {
+        passwordVisibilityChangerForLogin: './src/passwordVisibilityChanger/login/login.ts',
+        passwordVisibilityChangerForRegistration: './src/passwordVisibilityChanger/registration/registration.ts',
+    };
+    const generated = new Set(Object.keys(entry).flatMap(name => [
+        `${name}.bundle.js`, `${name}.bundle.js.map`, `${name}.bundle.js.LICENSE.txt`,
+    ]));
+    return {
+        mode,
+        devtool: mode === 'development' ? 'source-map' : false,
+        entry,
+        output: {
+            filename: '[name].bundle.js',
+            path: process.env.WEBPACK_OUTPUT_PATH
+                ? path.resolve(process.env.WEBPACK_OUTPUT_PATH)
+                : path.resolve(__dirname, '../resources/static/js'),
+            // Remove stale development maps without deleting unrelated files in this directory.
+            clean: { keep: asset => !generated.has(asset) },
+        },
+        resolve: { extensions: ['.ts', '.js'] },
+        module: {
+            rules: [{ test: /\.ts$/, use: 'ts-loader', exclude: /node_modules/ }],
+        },
+    };
 };

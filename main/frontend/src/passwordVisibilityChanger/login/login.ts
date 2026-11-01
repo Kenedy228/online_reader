@@ -2,15 +2,15 @@ import VisibilityDirector from "../utils/PasswordVisibilityChanger/director/Visi
 import ShowVisibility from "../utils/PasswordVisibilityChanger/classes/ShowVisibility";
 import HideVisibility from "../utils/PasswordVisibilityChanger/classes/HideVisibility";
 
-let icon : HTMLImageElement = document.querySelector(".show_hide_passwrd")!;
-let field : HTMLInputElement = document.querySelector("#password")!;
+const icon : HTMLImageElement = document.querySelector(".show_hide_passwrd")!;
+const field : HTMLInputElement = document.querySelector("#password")!;
 
 icon.addEventListener("click", (e : MouseEvent) => {
     e.preventDefault();
 
-    let status : String | undefined = icon?.dataset.status;
+    const status : string | undefined = icon?.dataset.status;
 
-    let director : VisibilityDirector = new VisibilityDirector();
+    const director : VisibilityDirector = new VisibilityDirector();
 
     if (status == "hide") {
         director.changer = new ShowVisibility();

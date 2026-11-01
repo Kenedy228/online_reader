@@ -206,19 +206,29 @@ PostgreSQL, Mailpit и приложение доступны через Docker C
 
 ## Проверки
 
-В frontend сейчас определён только script `build`; scripts `test`, `lint` и
-`typecheck` отсутствуют. Отдельную диагностику TypeScript после установки
-зависимостей можно выполнить из корня:
+Frontend-команды из `main/frontend`:
 
 ```sh
-node main/frontend/node_modules/typescript/bin/tsc --project main/frontend/tsconfig.json --noEmit
+npm ci
+npm run typecheck
+npm run lint
+npm run build
+npm run build:dev
 ```
 
-При исходном аудите эта проверка завершалась с
-`TS2792: Cannot find module 'undici-types'`. Webpack собирался с предупреждением
-об отсутствии `mode`. Обе проблемы отслеживаются в
-[#8](https://github.com/Kenedy228/online_reader/issues/8); успешная сборка Webpack
-не заменяет отдельную проверку типов и тесты приложения.
+`typecheck` использует strict TypeScript без emit; браузерный проект явно выбирает
+bundler module resolution и не включает ambient Node.js globals. Проверка библиотек
+не отключена. `lint` проверяет TypeScript исходники recommended-правилами
+ESLint/typescript-eslint и `prefer-const`, без допуска warnings. Versions новых
+lint-инструментов закреплены в package.json/lock-файле. Отдельного frontend test
+runner пока нет; пользовательские сценарии остаются в #27.
+
+`build` явно выбирает production: минификация, без source maps. `build:dev`
+выбирает development с отдельными `.map`. При смене режима очищаются только
+собственные bundles/sidecars, посторонние файлы каталога сохраняются. Не копируйте
+dev maps в публикационные артефакты. Имена обеих entry points сохранены.
+Maven запускает typecheck и lint после npm ci, до Webpack/Java-компиляции,
+поэтому обычный `./mvnw clean verify` проверяет и frontend.
 
 Java-тесты запускаются через `./mvnw test` или вместе со сборкой `./mvnw clean verify`.
 Проверяются рендер главной страницы, HTTP-выдача обоих сгенерированных bundles

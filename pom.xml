@@ -158,6 +158,16 @@
                         </configuration>
                     </execution>
                     <execution>
+                        <id>typecheck</id>
+                        <goals><goal>npm</goal></goals>
+                        <configuration><arguments>run typecheck</arguments></configuration>
+                    </execution>
+                    <execution>
+                        <id>lint</id>
+                        <goals><goal>npm</goal></goals>
+                        <configuration><arguments>run lint</arguments></configuration>
+                    </execution>
+                    <execution>
                         <id>webpack</id>
                         <goals><goal>npm</goal></goals>
                         <configuration>
