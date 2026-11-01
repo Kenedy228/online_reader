@@ -78,6 +78,22 @@ Legacy admin/actions сохранены без переноса прав. Рол
 Новый private маршрут требует явной регистрации в policy и owner/authority проверки
 в сервисе/SQL; не ослабляйте fallback ради работающего endpoint.
 
+## HTTP security и ошибки
+
+Native CSRF/session+XOR остаются включёнными без исключения mutations. Headers
+пишет единственный outer HeaderWriterFilter из HttpHeadersConfiguration перед
+FilterChainProxy, eager: это покрывает firewall400. Inner headers DSL отключён
+только ради одной регистрации; не удаляйте внешний filter и не дублируйте writers.
+CSP не разрешает unsafe-inline/eval, ресурсы same-origin; HSTS только secure request,
+без поддоменов/preload, no-referrer и native no-store. Не обходите CSP ради UI/audit.
+JSON anonymous denial —401, UI —login redirect; access/CSRF denial —403. ERROR
+dispatch рендерит фиксированный HTML/ProblemDetail через HttpErrorController:
+не копируйте ErrorAttributes, exception/message/path/query или ввод в ответы.
+/error закреплён, whitelabel выключен, runtime overrides проверяются до I/O.
+Формы сохраняют HTML validation200/PRG, ошибку login302 и rate429 контракты.
+Политика/ограничения: [docs/http-security.md](docs/http-security.md). #18 остаётся
+открытой до реальных file MIME/disposition/cache/active-content проверок в #22.
+
 ## Структура и ответственность
 
 | Каталог | Назначение |

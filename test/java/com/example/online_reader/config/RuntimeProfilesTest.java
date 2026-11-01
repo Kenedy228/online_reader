@@ -99,7 +99,7 @@ class RuntimeProfilesTest {
             "online-reader.registration.max-clients=0", "online-reader.registration.max-clients=4097",
             "online-reader.registration.window=999ms", "online-reader.registration.window=16m",
             "online-reader.auth.max-clients=4097", "online-reader.auth.window=999ms",
-            "online-reader.auth.window=16m", "spring.jpa.show-sql=true", "logging.level.org.hibernate.SQL=DEBUG", "server.error.include-stacktrace=always"})
+            "online-reader.auth.window=16m", "spring.jpa.show-sql=true", "logging.level.org.hibernate.SQL=DEBUG", "server.error.include-stacktrace=always", "server.error.path=/alternate", "server.error.whitelabel.enabled=true"})
     void rejectsInvalidProductionOverridesWithoutEchoingValues(String override) {
         String[] setting = override.split("=", 2);
         var settings = production();

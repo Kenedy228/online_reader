@@ -20,7 +20,19 @@ import org.springframework.security.authentication.AccountStatusUserDetailsCheck
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.AuthenticationEntryPoint;
+import org.springframework.security.web.authentication.DelegatingAuthenticationEntryPoint;
+import org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.util.matcher.MediaTypeRequestMatcher;
+import org.springframework.security.web.util.matcher.RequestMatcher;
+import org.springframework.http.MediaType;
+import org.springframework.web.accept.HeaderContentNegotiationStrategy;
+
+import java.util.LinkedHashMap;
+import java.util.Set;
+
+import static org.springframework.security.config.Customizer.withDefaults;
 
 @Configuration(proxyBeanMethods = false)
 public class SecurityConfig {
@@ -29,6 +41,7 @@ public class SecurityConfig {
             "/assets/goal.png", "/assets/hide.png", "/assets/logo.svg", "/assets/show.png",
             "/styles/footer.css", "/styles/header.css", "/styles/index.css", "/styles/login.css",
             "/styles/registration.css", "/styles/styles.css",
+            "/styles/error.css",
             "/js/passwordVisibilityChangerForLogin.bundle.js",
             "/js/passwordVisibilityChangerForRegistration.bundle.js"
     };
@@ -56,7 +69,20 @@ public class SecurityConfig {
                                             @Value("${online-reader.registration.max-attempts}") int registrationAttempts,
                                             @Value("${online-reader.registration.max-clients}") int registrationClients,
                                             @Value("${online-reader.registration.window}") String registrationWindow) throws Exception {
+        var json = new MediaTypeRequestMatcher(new HeaderContentNegotiationStrategy(),
+                MediaType.APPLICATION_JSON, MediaType.APPLICATION_PROBLEM_JSON, new MediaType("application", "*+json"));
+        json.setIgnoredMediaTypes(Set.of(MediaType.ALL));
+        var loginEntryPoint = new LoginUrlAuthenticationEntryPoint("/login");
+        var entryPoints = new LinkedHashMap<RequestMatcher, AuthenticationEntryPoint>();
+        entryPoints.put(json, (request, response, error) -> response.sendError(401));
+        var entryPoint = new DelegatingAuthenticationEntryPoint(entryPoints);
+        entryPoint.setDefaultEntryPoint(loginEntryPoint);
         http.authenticationManager(authentication)
+                .csrf(withDefaults()) // Native session repository + XOR/BREACH protection; no ignored mutations.
+                // Native writers run once in HttpHeadersConfiguration, before the firewall too.
+                .headers(headers -> headers.disable())
+                .exceptionHandling(errors -> errors.authenticationEntryPoint(entryPoint)
+                        .accessDeniedHandler((request, response, error) -> response.sendError(403)))
                 .authorizeHttpRequests(rules -> rules.dispatcherTypeMatchers(DispatcherType.ERROR).permitAll()
                         .requestMatchers(HttpMethod.GET, "/", "/login", "/registration").permitAll()
                         .requestMatchers(HttpMethod.HEAD, "/", "/login", "/registration").permitAll()
