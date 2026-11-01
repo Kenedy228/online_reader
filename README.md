@@ -88,6 +88,37 @@ npm run build
 автоматически; отдельная команда npm нужна только для самостоятельной работы
 с frontend. Изменяйте исходники TypeScript, а не результаты сборки.
 
+## Docker для локальной разработки
+
+Нужны Docker Engine и Compose v2.20+ с поддержкой `up --wait` и BuildKit.
+Создайте приватный `.env` из `.env.example`, задайте свои локальные DB credentials.
+Для запуска только PostgreSQL (приложение работает на хосте):
+
+```sh
+docker compose up -d --wait postgres
+```
+
+Для PostgreSQL и приложения в контейнере:
+
+```sh
+docker compose --profile app up -d --build --wait
+```
+
+Откройте `http://127.0.0.1:8080`. Image собирается локально из исходников
+через Maven Wrapper; build stage запускает обычную изолированную suite.
+Runtime использует JRE21 и непривилегированного пользователя. Служебные порты
+опубликованы только на loopback; PostgreSQL сохраняет данные в named volume.
+
+```sh
+docker compose --profile app down
+```
+
+Эта команда останавливает/удаляет контейнеры и сеть, сохраняя данные PostgreSQL.
+Не добавляйте `-v`: оно удаляет volumes. Настройка портов, host JAR launch,
+healthchecks, сохранность данных и ограничения описаны в
+[docs/local-development.md](docs/local-development.md). Mailpit-контейнер пока
+отдельная задача #13; SMTP при старте приложения не проверяется.
+
 ## Запуск и профили
 
 Профиль выбирается явно через `SPRING_PROFILES_ACTIVE`. Без профиля, с прежним
@@ -112,7 +143,7 @@ npm run build
 `local`, который использует PostgreSQL.
 
 Для обычного JAR подготовьте собственную локальную PostgreSQL и Mailpit.
-Docker Compose добавляется в [#9](https://github.com/Kenedy228/online_reader/issues/9).
+Docker Compose и локальный образ описаны в [docs/local-development.md](docs/local-development.md).
 Flyway применяет версионированные SQL-миграции к пустой БД при запуске, затем
 Hibernate проверяет схему с `ddl-auto=validate`. Повторный запуск сохраняет данные
 и не выполняет уже применённые миграции. Непустая БД без истории Flyway требует
@@ -168,8 +199,8 @@ JNDI, альтернативные Hikari connection settings и прямые `s
 history. Не используйте их. Проверки секретов и правила работы с `.env` описаны
 в [docs/security.md](docs/security.md).
 
-Автоматизация локальных сервисов и команд остаётся в
-[#9](https://github.com/Kenedy228/online_reader/issues/9),
+PostgreSQL и приложение доступны через Docker Compose. Контейнер Mailpit и
+Makefile остаются в
 [#13](https://github.com/Kenedy228/online_reader/issues/13) и
 [#15](https://github.com/Kenedy228/online_reader/issues/15).
 
