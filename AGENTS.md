@@ -197,8 +197,10 @@ output на `target/generated-resources/static/js` и включает файл�
 не генерирует source maps; переключение режима удаляет только принадлежащие этим
 entry points JS/maps/license sidecars и сохраняет посторонние файлы каталога.
 Не добавляйте deps/bundles через `git add -f`; меняйте исходники и конфигурацию.
-`package-lock.json` остаётся единственным lock-файлом для npm ci.
-Отдельного JS test runner нет; не выдавайте lint/typecheck за E2E UI-проверку.
+В каждом npm package единственный lock-файл для npm ci — `package-lock.json`;
+`main/frontend` и изолированный `test/browser` имеют отдельные lock-файлы.
+Unit JS test runner не добавлен; browser E2E выполняет ReaderE2EIT через Playwright.
+Не выдавайте lint/typecheck за E2E UI-проверку.
 
 **Не запускайте Java-тесты с runtime datasource.** `./mvnw test` использует `test`.
 `RuntimeEnvironmentPostProcessor` загружает `test/resources/application-test.properties`
@@ -217,6 +219,19 @@ entry points JS/maps/license sidecars и сохраняет посторонни
 `./mvnw -Ppostgres-it clean verify` запускает JPA/migration contract checks
 на disposable PostgreSQL17 (Docker обязателен); тесты `*IT` не входят в обычный
 быстрый запуск. H2 использует `spring.flyway.enabled=false`, create-drop и PostgreSQL mode для native registration INSERT; проверка PostgreSQL остаётся отдельной.
+
+`make setup-e2e` устанавливает pinned test/browser dependencies и Chromium;
+системные библиотеки устанавливаются отдельно по `docs/quality.md`.
+`make test-e2e` (`reader-e2e`) запускает сохранённые browser regression suites
+через ReaderE2EIT на своей PostgreSQL/Mailpit/private storage, runtime local;
+`make test-acceptance` объединяет их с postgres-it/mailpit-it и выполняется в CI.
+Не запускайте browser scripts против пользовательского runtime: descriptor создаёт
+только owned coordinator. Все contexts блокируют внешний origin; API redirects
+проверяются явно. Артефакты только в target, без cookies/proofs в Git/PR.
+`make test-performance` (`reader-performance`) — opt-in10 users/1000books/10000notes,
+app+DB по1CPU/2ГиБ с фактическими inspect assertions, own labelled volume cleanup.
+Latency на shared CI не является SLA; OS/носитель/нагрузка и непройденные ручные
+screen-reader проверки указываются явно. Матрица/команды — `docs/quality.md`.
 
 `local` и `production` направляют почту только в Mailpit (loopback или `mailpit`),
 SMTP auth/TLS выключены; соответствующие overrides отклоняются до I/O.
