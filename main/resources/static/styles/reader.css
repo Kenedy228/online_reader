@@ -1,0 +1,22 @@
+.reader { max-width: 48rem; }
+.reader .reader-toc { margin: 1.5rem 0; }
+.reader summary { cursor: pointer; padding: .5rem 0; font-weight: bold; }
+.reader .reader-toc ol { padding-left: 1.5rem; max-height: 22rem; overflow: auto; }
+.reader .reader-toc a { display: inline-block; padding: .4rem 0; }
+.reader .reader-settings { display: flex; flex-wrap: wrap; align-items: center; gap: .75rem; }
+.reader .reader-settings label { margin: 0; }
+.reader select { max-width: 100%; min-height: 2.75rem; padding: .5rem; font: inherit; color: #202020; background: white; border: 1px solid #666; }
+.reader select:focus-visible, .reader summary:focus-visible, .reader article:focus-visible { outline: 3px solid #174c80; outline-offset: 4px; }
+.reader .reader-text { font-size: 1.125rem; line-height: 1.8; white-space: pre-wrap; overflow-wrap: anywhere; margin: 1.5rem 0; }
+.reader .font-large { font-size: 1.375rem; }
+.reader .font-largest { font-size: 1.75rem; }
+.reader-text p, .reader-text blockquote, .reader-text pre, .reader-text ul, .reader-text ol { margin: .5em 0; }
+.reader-text ul, .reader-text ol { padding-left: 1.5em; }
+.reader-text h1, .reader-text h2, .reader-text h3, .reader-text h4, .reader-text h5, .reader-text h6 { font-size: 1.2em; line-height: 1.5; margin: 1em 0 .5em; }
+.reader-text img { display: block; max-width: 100%; height: auto; margin: .75em auto; }
+.reader-text blockquote { padding-left: 1em; border-left: 3px solid #aaa; }
+.reader-text pre, .reader-text code { white-space: pre-wrap; overflow-wrap: anywhere; }
+.reader .reader-note { margin-top: 2rem; color: #505050; }
+
+/* Canonical LF stays in DOM/locator text; block margins supply its visual spacing. */
+.reader-text .reader-separator { display: none; }

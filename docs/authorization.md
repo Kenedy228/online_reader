@@ -4,7 +4,7 @@
 администратор. Администратор не получает доступ к чужой личной библиотеке,
 файлам, прогрессу или заметкам. Это основа #17; полное закрытие задачи требует
 реальных owner-проверок в #19/#22/#25/#26. Библиотека из #19 реализована;
-загрузка/download файлов из #22 реализованы; прогресс и заметки ещё ожидают интеграции.
+загрузка/download файлов из #22 и owner read/resources из #23 реализованы; прогресс и заметки ещё ожидают интеграции.
 
 ## Матрица доступа
 
@@ -22,8 +22,9 @@
 Список/карточка/metadata/delete библиотеки реализованы в `/library`; CurrentAccount
 проверяет live accountId/username/роль/флаги, SQL ограничен owner, Admin bypass нет.
 Подробности и реальные resource tests —[library.md](library.md). Загрузка и attachment download
-с owner/READY проверкой реализованы ([book-files.md](book-files.md)). Чтение,
-прогресс и заметки ещё отсутствуют, их URL закрыты fallback.
+с owner/READY проверкой реализованы ([book-files.md](book-files.md)). Чтение и
+приватные изображения реализованы ([reader.md](reader.md)). Прогресс и заметки
+ещё отсутствуют, их URL закрыты fallback.
 Production admin handlers/панели тоже пока нет;
 разрешённый админом запрос неизвестного `/admin/*` завершится 404. Test-only
 policy probes позволяют проверить filter chain, но не заменяют resource tests.
@@ -141,3 +142,6 @@ JSON/UI errors, CSP и внешний header filter — [http-security.md](http-
 provider/RegistrationService/JPA вызовы с назначением/снятием роли. Регистрация
 создаёт User даже при изменённом default БД. Все данные синтетические; внешняя
 БД и аккаунты владельца не менялись.
+
+Читалка и приватные PNG/JPEG повторяют live owner/READY policy перед I/O.
+Admin не получает чужие страницы или изображения; контракт —[reader.md](reader.md).

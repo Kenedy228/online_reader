@@ -1,6 +1,7 @@
 package com.example.online_reader.book.files;
 
 import org.apache.commons.compress.archivers.zip.*;
+import static com.example.online_reader.book.files.EpubPaths.*;
 import org.apache.commons.compress.utils.InputStreamStatistics;
 import javax.xml.stream.*;
 import javax.imageio.ImageIO;
@@ -224,23 +225,11 @@ final class EpubValidator {
     private static boolean start(XMLStreamReader r,String name){return r.isStartElement() && name.equals(r.getLocalName());}
     private static String attr(XMLStreamReader r,String name){return r.getAttributeValue(null,name);}
     private static boolean hasToken(String value,String token){return value!=null && Arrays.asList(value.split("\\s+")).contains(token);}
-    private static String directory(String path){int slash=path.lastIndexOf('/');return slash<0?"":path.substring(0,slash+1);}
     private static boolean font(String media){return media!=null && Set.of("font/otf","font/ttf","font/woff","font/woff2","application/vnd.ms-opentype","application/font-sfnt","application/font-woff").contains(media);}
-    private static boolean safeName(String path) {
-        if(path==null || path.isEmpty() || path.length()>1024 || path.startsWith("/") || path.contains("\\") || path.contains(":") || path.contains("%") || path.codePoints().anyMatch(Character::isISOControl))return false;
-        for(String part:path.split("/",-1))if(part.equals("..") || part.equals("."))return false;
-        return true;
-    }
     private static boolean rawNameSafe(ZipArchiveEntry entry) {
         byte[] name=entry.getRawName();if(name==null)return false;
         for(byte value:name)if(value==92)return false;
         return true;
     }
-    private static String reference(String base,String value) {
-        if(value==null || value.isBlank())throw BookFileException.invalid();
-        var uri=URI.create(value);
-        if(uri.isAbsolute() || uri.getRawAuthority()!=null || uri.getRawQuery()!=null || uri.getRawFragment()!=null || uri.getPath().startsWith("/") || uri.getPath().contains("\\"))throw BookFileException.invalid();
-        String result=Path.of(base).resolve(uri.getPath()).normalize().toString().replace('\\','/');
-        if(!safeName(result))throw BookFileException.invalid();return result;
-    }
+
 }

@@ -1,9 +1,9 @@
 # HTTP security и ошибки
 
 Политика относится к существующим Spring MVC/Thymeleaf формам и защищённой
-административной границе. Это реализация основы #18; реальные user-file
-Content-Type/Disposition и изоляция активного контента будут проверены в #22.
-Пока файловых endpoints нет, #18 не закрывается по этому критерию.
+административной границе, реальным book downloads и читалке. User-file
+Content-Type/Disposition и изоляция активного контента проверены в #22;
+реконструкция текста и приватные PNG/JPEG описаны в [reader.md](reader.md).
 
 ## Измеренные defaults и явная конфигурация
 
@@ -125,9 +125,10 @@ ContentDisposition API, без конкатенации ввода/CRLF в heade
 пользовательский HTML/SVG/XML или исходный активный документ inline в origin
 приложения; reader требует отдельной sanitization/sandbox/origin политики.
 
-Сейчас это контракт #22, а не готовый download handler. Не выдавайте проверку
-logo.svg или test-only файла за доказательство защиты реальных книг. #18 остаётся
-открытой до real MIME/disposition/cache/active-content evidence из #22.
+Download handler и проверки реальных загруженных TXT/EPUB реализованы в #22.
+Не выдавайте проверку logo.svg или test-only файла за доказательство защиты
+реальных книг. Reader #23 реконструирует HTML из фиксированного allowlist,
+экранирует текст и выдаёт только приватные PNG/JPEG, сохраняя CSP.
 
 ## Проверки
 
@@ -152,4 +153,4 @@ account/owner/READY до storage. TXT/EPUB получают проверенны
 с безопасным server-generated filename, nosniff/no-store/CSP. Original path/name
 не участвуют в маршруте или disposition. Публичной выдачи storage/inline HTML/XML/SVG
 нет. Real HTTP tests проверяют байты, headers и foreign User/Admin404, ошибки CSRF/size.
-Подробности —[book-files.md](book-files.md); reader content sanitization остаётся #23.
+Подробности —[book-files.md](book-files.md); reader content sanitization и private PNG/JPEG реализованы в [reader.md](reader.md).

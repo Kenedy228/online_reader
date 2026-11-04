@@ -15,7 +15,7 @@ import java.util.*;
 @Service
 @Transactional(timeout=5)
 public class FileBookTransactions {
-    public record Source(Long id,UUID key,Book.Format format,long size) { }
+    public record Source(Long id,UUID key,Book.Format format,long size,String fingerprint) { }
     public static final class Duplicate extends RuntimeException {
         private final Long id;private final Book.State state;
         Duplicate(Book book){id=book.getId();state=book.getState();}
@@ -53,20 +53,20 @@ public class FileBookTransactions {
         limits();
         var book=books.findByIdAndOwner_Id(id,account.requireId()).orElseThrow(()->new ResponseStatusException(HttpStatus.NOT_FOUND));
         if(book.getState()!=Book.State.READY)throw new ResponseStatusException(HttpStatus.NOT_FOUND);
-        return new Source(book.getId(),book.getStorageKey(),book.getFormat(),book.getOriginalSize());
+        return new Source(book.getId(),book.getStorageKey(),book.getFormat(),book.getOriginalSize(),book.getSourceSha256());
     }
     public int recoverInterrupted(){limits();return books.recoverInterrupted();}
     @Transactional(readOnly=true,timeout=5)
     public List<Source> abandoned() {
         limits();
         return books.findByStateAndCreatedAtBefore(Book.State.PROCESSING,java.time.Instant.now().minusSeconds(60),PageRequest.of(0,50))
-                .stream().map(b->new Source(b.getId(),b.getStorageKey(),b.getFormat(),b.getOriginalSize())).toList();
+                .stream().map(b->new Source(b.getId(),b.getStorageKey(),b.getFormat(),b.getOriginalSize(),b.getSourceSha256())).toList();
     }
     @Transactional(readOnly=true,timeout=5)
     public List<Source> deleting(long cursor) {
         limits();
         return books.findByStateAndIdGreaterThanOrderByIdAsc(Book.State.DELETING,cursor,PageRequest.of(0,50))
-                .stream().map(b->new Source(b.getId(),b.getStorageKey(),b.getFormat(),b.getOriginalSize())).toList();
+                .stream().map(b->new Source(b.getId(),b.getStorageKey(),b.getFormat(),b.getOriginalSize(),b.getSourceSha256())).toList();
     }
     public void cleaned(Source source) {
         limits();

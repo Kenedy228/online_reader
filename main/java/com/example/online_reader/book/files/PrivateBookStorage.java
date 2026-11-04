@@ -121,16 +121,27 @@ public class PrivateBookStorage implements AutoCloseable {
             input.transferTo(output);output.flush();channel.force(true);budget.check();
         }
     }
-    public synchronized InputStream open(UUID key,long expected)throws IOException {
+    public InputStream open(UUID key,long expected)throws IOException {
+        return Channels.newInputStream(openChannel(key,expected));
+    }
+    /** Read pin stays held until the channel (including its ZIP owner) closes. */
+    public synchronized SeekableByteChannel openChannel(UUID key,long expected)throws IOException {
         var channel=FileChannel.open(path(key),StandardOpenOption.READ,LinkOption.NOFOLLOW_LINKS);
         if(channel.size()!=expected){channel.close();throw new IOException("Invalid source size");}
         readers.merge(key,1,Integer::sum);
-        return new FilterInputStream(Channels.newInputStream(channel)) {
-            boolean closed;
+        return new SeekableByteChannel() {
+            private boolean closed;
+            public int read(java.nio.ByteBuffer target)throws IOException{return channel.read(target);}
+            public int write(java.nio.ByteBuffer source)throws IOException{throw new NonWritableChannelException();}
+            public long position()throws IOException{return channel.position();}
+            public SeekableByteChannel position(long value)throws IOException{channel.position(value);return this;}
+            public long size()throws IOException{return channel.size();}
+            public SeekableByteChannel truncate(long size)throws IOException{throw new NonWritableChannelException();}
+            public boolean isOpen(){return channel.isOpen();}
             @Override public void close()throws IOException {
                 synchronized(PrivateBookStorage.this) {
                     if(closed)return;closed=true;
-                    try{super.close();}finally{readers.computeIfPresent(key,(k,n)->n==1?null:n-1);}
+                    try{channel.close();}finally{readers.computeIfPresent(key,(k,n)->n==1?null:n-1);}
                 }
             }
         };

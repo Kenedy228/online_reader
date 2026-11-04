@@ -16,6 +16,7 @@
                     <span th:if="${book.deleting()}" th:text="${book.title}"></span></h2>
                 <p th:text="${#strings.isEmpty(book.author) ? 'Автор не указан' : book.author}"></p>
                 <p class="book-meta"><span th:text="${book.format}"></span> · <span th:text="${book.stateLabel()}"></span> · <span th:text="${book.created}"></span></p>
+                <a th:if="${book.ready()}" th:href="@{/library/books/{id}/read(id=${book.id})}">Читать книгу</a>
                 <p th:if="${book.deleting()}">Книга недоступна. Завершается удаление.</p>
             </li>
         </ul>
