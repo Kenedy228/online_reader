@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{library/shared :: head('Удалить книгу')}"></head>
+<body>
+<a class="skip-link" href="#main">К содержимому</a>
+<header th:replace="~{components/header :: header}"></header>
+<main id="main" class="library" tabindex="-1">
+    <a th:href="@{/library/books/{id}(id=${book.id})}">К карточке книги</a>
+    <h1>Удалить книгу?</h1>
+    <h2 th:text="${book.title}"></h2>
+    <dl th:replace="~{library/shared :: metadata(${book})}"></dl>
+    <p>Книга станет недоступна сразу после подтверждения. Отменить удаление нельзя.</p>
+    <form method="post" th:action="@{/library/books/{id}/delete(id=${book.id})}" th:object="${deletion}">
+        <div th:if="${#fields.hasAnyErrors()}" class="errors" role="alert" tabindex="-1">
+            <p>Удаление не подтверждено.</p>
+            <ul><li th:each="error : ${#fields.globalErrors()}" th:text="${error}"></li></ul>
+            <p th:if="${#fields.hasErrors('version')}">Обновите форму по ссылке «К карточке книги».</p>
+        </div>
+        <input type="hidden" th:field="*{version}">
+        <label class="confirmation"><input type="checkbox" th:field="*{confirmed}" required aria-describedby="confirmed-error" th:attr="aria-invalid=${#fields.hasErrors('confirmed')}"> Подтверждаю удаление книги</label>
+        <p id="confirmed-error" class="field-error"><span th:errors="*{confirmed}"></span></p>
+        <div class="actions"><button type="submit">Удалить книгу</button><a th:href="@{/library/books/{id}(id=${book.id})}">Отмена</a></div>
+    </form>
+</main></body></html>

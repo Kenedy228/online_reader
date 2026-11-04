@@ -41,7 +41,7 @@ public class SecurityConfig {
             "/assets/goal.png", "/assets/hide.png", "/assets/logo.svg", "/assets/show.png",
             "/styles/footer.css", "/styles/header.css", "/styles/index.css", "/styles/login.css",
             "/styles/registration.css", "/styles/styles.css",
-            "/styles/error.css",
+            "/styles/error.css", "/styles/library.css",
             "/js/passwordVisibilityChangerForLogin.bundle.js",
             "/js/passwordVisibilityChangerForRegistration.bundle.js"
     };
@@ -89,6 +89,9 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/login", "/registration").permitAll()
                         .requestMatchers(HttpMethod.GET, PUBLIC_RESOURCES).permitAll()
                         .requestMatchers(HttpMethod.HEAD, PUBLIC_RESOURCES).permitAll()
+                        .requestMatchers(HttpMethod.GET, "/library", "/library/books/{id}", "/library/books/{id}/edit", "/library/books/{id}/delete").authenticated()
+                        .requestMatchers(HttpMethod.HEAD, "/library", "/library/books/{id}", "/library/books/{id}/edit", "/library/books/{id}/delete").authenticated()
+                        .requestMatchers(HttpMethod.POST, "/library/books/{id}/edit", "/library/books/{id}/delete").authenticated()
                         .requestMatchers("/admin/**").access((auth, context) ->
                                 new AuthorizationDecision(adminAccess.isAllowed(auth.get())))
                         .anyRequest().denyAll())

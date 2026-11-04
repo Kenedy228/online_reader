@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{library/shared :: head('Моя библиотека')}"></head>
+<body>
+<a class="skip-link" href="#main">К содержимому</a>
+<header th:replace="~{components/header :: header}"></header>
+<main id="main" class="library" tabindex="-1">
+    <h1>Моя библиотека</h1>
+    <p th:if="${books.empty}" class="empty">В библиотеке пока нет книг.</p>
+    <th:block th:unless="${books.empty}">
+        <p th:text="|Всего книг: ${books.totalElements}|"></p>
+        <ul class="book-list" aria-label="Книги">
+            <li th:each="book : ${books.content}">
+                <h2><a th:unless="${book.deleting()}" th:href="@{/library/books/{id}(id=${book.id})}" th:text="${book.title}"></a>
+                    <span th:if="${book.deleting()}" th:text="${book.title}"></span></h2>
+                <p th:text="${#strings.isEmpty(book.author) ? 'Автор не указан' : book.author}"></p>
+                <p class="book-meta"><span th:text="${book.format}"></span> · <span th:text="${book.stateLabel()}"></span> · <span th:text="${book.created}"></span></p>
+                <p th:if="${book.deleting()}">Книга недоступна. Завершается удаление.</p>
+            </li>
+        </ul>
+        <nav class="pagination" aria-label="Страницы библиотеки">
+            <a th:if="${books.hasPrevious()}" th:href="@{/library(page=${books.number - 1},size=${books.size})}" rel="prev">Предыдущая</a>
+            <span th:text="|Страница ${books.number + 1} из ${books.totalPages}|"></span>
+            <a th:if="${books.hasNext()}" th:href="@{/library(page=${books.number + 1},size=${books.size})}" rel="next">Следующая</a>
+        </nav>
+    </th:block>
+</main>
+</body></html>

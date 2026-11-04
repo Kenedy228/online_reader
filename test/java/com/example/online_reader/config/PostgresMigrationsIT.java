@@ -3,6 +3,7 @@ package com.example.online_reader.config;
 import com.example.online_reader.actions.model.Action;
 import com.example.online_reader.admin.model.Admin;
 import com.example.online_reader.user.model.User;
+import com.example.online_reader.book.model.Book;
 import org.flywaydb.core.Flyway;
 import org.hibernate.cfg.Configuration;
 import org.junit.jupiter.api.Test;
@@ -34,7 +35,7 @@ class PostgresMigrationsIT {
     void migratesEmptyDatabaseAndValidatesJpaMappings() {
         Flyway flyway = migrate("schema_" + UUID.randomUUID().toString().replace("-", ""));
         var settings = new Configuration()
-                .addAnnotatedClass(User.class).addAnnotatedClass(Admin.class).addAnnotatedClass(Action.class)
+                .addAnnotatedClass(User.class).addAnnotatedClass(Admin.class).addAnnotatedClass(Action.class).addAnnotatedClass(Book.class)
                 .setProperty("jakarta.persistence.jdbc.url", DATABASE.getJdbcUrl())
                 .setProperty("jakarta.persistence.jdbc.user", DATABASE.getUsername())
                 .setProperty("jakarta.persistence.jdbc.password", DATABASE.getPassword())
@@ -198,7 +199,7 @@ class PostgresMigrationsIT {
                 statement.executeUpdate("insert into actions(id,label,description) values(1,'Read','legacy-fixture')");
                 statement.executeUpdate("insert into admin_actions select id,1 from admin");
             }
-            assertThat(flyway(schema, null).migrate().migrationsExecuted).isEqualTo(1);
+            assertThat(flyway(schema, "4").migrate().migrationsExecuted).isEqualTo(1);
             try (var statement = connection.createStatement();
                  var rows = statement.executeQuery("select username,password,enabled,account_non_locked,email,role from users")) {
                 assertThat(rows.next()).isTrue();
@@ -232,6 +233,30 @@ class PostgresMigrationsIT {
         }
     }
 
+    @Test
+    void v5PreservesExistingAccountsAndStartsWithEmptyLibrary() throws SQLException {
+        String schema = "library_" + UUID.randomUUID().toString().replace("-", "");
+        flyway(schema, "4").migrate();
+        try (var connection = connection(schema)) {
+            insertLegacy(connection, "users", "before-library", HASH);
+            assertThat(flyway(schema, null).migrate().migrationsExecuted).isEqualTo(1);
+            try (var statement = connection.createStatement();
+                 var rows = statement.executeQuery("select username,password,enabled,account_non_locked,role from users")) {
+                assertThat(rows.next()).isTrue();
+                assertThat(rows.getString(1)).isEqualTo("before-library");
+                assertThat(rows.getString(2)).isEqualTo(HASH);
+                assertThat(rows.getBoolean(3)).isFalse();
+                assertThat(rows.getBoolean(4)).isFalse();
+                assertThat(rows.getString(5)).isEqualTo("User");
+                assertThat(rows.next()).isFalse();
+            }
+            try (var statement = connection.createStatement();
+                 var rows = statement.executeQuery("select count(*) from books")) {
+                rows.next(); assertThat(rows.getInt(1)).isZero();
+            }
+        }
+    }
+
     private static Connection connection(String schema) throws SQLException {
         var connection = DriverManager.getConnection(DATABASE.getJdbcUrl(), DATABASE.getUsername(), DATABASE.getPassword());
         connection.setSchema(schema);
@@ -260,7 +285,7 @@ class PostgresMigrationsIT {
         Flyway flyway = Flyway.configure().dataSource(DATABASE.getJdbcUrl(),
                         DATABASE.getUsername(), DATABASE.getPassword())
                 .defaultSchema(schema).schemas(schema).cleanDisabled(true).load();
-        assertThat(flyway.migrate().migrationsExecuted).isEqualTo(4);
+        assertThat(flyway.migrate().migrationsExecuted).isEqualTo(5);
         flyway.validate();
         return flyway;
     }

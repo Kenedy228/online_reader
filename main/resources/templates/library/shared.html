@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head th:fragment="head(title)">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title th:text="|${title} — ДостоRead|"></title>
+    <link rel="stylesheet" th:href="@{/styles/styles.css}">
+    <link rel="stylesheet" th:href="@{/styles/header.css}">
+    <link rel="stylesheet" th:href="@{/styles/library.css}">
+</head>
+<body>
+<dl th:fragment="metadata(book)">
+    <dt>Автор</dt><dd th:text="${#strings.isEmpty(book.author) ? 'Не указан' : book.author}"></dd>
+    <dt>Формат</dt><dd th:text="${book.format}"></dd>
+    <dt>Размер исходного файла</dt><dd th:text="|${book.originalSize} байт|"></dd>
+    <dt>Добавлена</dt><dd th:text="|${book.created} (UTC)|"></dd>
+    <dt>Состояние</dt><dd th:text="${book.stateLabel()}"></dd>
+</dl>
+</body></html>

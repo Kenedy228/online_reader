@@ -220,6 +220,7 @@
                             <includes combine.children="append">
                                 <include>**/PostgresMigrationsIT.java</include>
                                 <include>**/RegistrationPostgresIT.java</include>
+                                <include>**/BookPostgresIT.java</include>
                             </includes>
                         </configuration>
                         <executions>
