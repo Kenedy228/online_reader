@@ -81,3 +81,6 @@ V3→V4 сохраняет legacy данные и проверяет role CHECK/
 и сохранение source reference после логического удаления.
 Используется закреплённый image digest; Docker обязателен.
 При ошибке Docker или PostgreSQL fallback к dev/H2 отсутствует.
+
+V7: reading_progress с composite owner FK к books, CAS revision и ON DELETE CASCADE.
+Upgrade/deletion/restart и rollback —[progress.md](progress.md). Миграции V1–V6 не менялись.

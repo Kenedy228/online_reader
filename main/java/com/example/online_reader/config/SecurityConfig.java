@@ -3,6 +3,7 @@ package com.example.online_reader.config;
 import com.example.online_reader.security.LoginAttemptLimiter;
 import com.example.online_reader.security.AdminAccessPolicy;
 import com.example.online_reader.book.files.*;
+import com.example.online_reader.book.progress.*;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.authorization.AuthorizationDecision;
 import com.example.online_reader.security.LoginRequestFilter;
@@ -43,7 +44,7 @@ public class SecurityConfig {
             "/styles/footer.css", "/styles/header.css", "/styles/index.css", "/styles/login.css",
             "/styles/registration.css", "/styles/styles.css",
             "/styles/error.css", "/styles/library.css", "/styles/reader.css",
-            "/js/bookUpload.bundle.js",
+            "/js/bookUpload.bundle.js", "/js/readingProgress.bundle.js",
             "/js/passwordVisibilityChangerForLogin.bundle.js",
             "/js/passwordVisibilityChangerForRegistration.bundle.js"
     };
@@ -77,6 +78,7 @@ public class SecurityConfig {
         json.setIgnoredMediaTypes(Set.of(MediaType.ALL));
         var loginEntryPoint = new LoginUrlAuthenticationEntryPoint("/login");
         var entryPoints = new LinkedHashMap<RequestMatcher, AuthenticationEntryPoint>();
+        entryPoints.put(ProgressHttp::api,(request,response,error)->ProgressHttp.write(response,401));
         entryPoints.put(json, (request, response, error) -> response.sendError(401));
         var entryPoint = new DelegatingAuthenticationEntryPoint(entryPoints);
         entryPoint.setDefaultEntryPoint(loginEntryPoint);
@@ -85,7 +87,7 @@ public class SecurityConfig {
                 // Native writers run once in HttpHeadersConfiguration, before the firewall too.
                 .headers(headers -> headers.disable())
                 .exceptionHandling(errors -> errors.authenticationEntryPoint(entryPoint)
-                        .accessDeniedHandler((request, response, error) -> response.sendError(403)))
+                        .accessDeniedHandler((request, response, error) -> {if(ProgressHttp.api(request))ProgressHttp.write(response,403);else response.sendError(403);} ))
                 .authorizeHttpRequests(rules -> rules.dispatcherTypeMatchers(DispatcherType.ERROR).permitAll()
                         .requestMatchers(HttpMethod.GET, "/", "/login", "/registration").permitAll()
                         .requestMatchers(HttpMethod.HEAD, "/", "/login", "/registration").permitAll()
@@ -98,6 +100,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/library", "/library/books/{id}", "/library/books/{id}/edit", "/library/books/{id}/delete").authenticated()
                         .requestMatchers(HttpMethod.HEAD, "/library", "/library/books/{id}", "/library/books/{id}/edit", "/library/books/{id}/delete").authenticated()
                         .requestMatchers(HttpMethod.POST, "/library/books/{id}/edit", "/library/books/{id}/delete").authenticated()
+                        .requestMatchers(HttpMethod.GET,"/api/v1/books/{id}/reading-progress").authenticated()
+                        .requestMatchers(HttpMethod.PUT,"/api/v1/books/{id}/reading-progress").authenticated()
                         .requestMatchers("/admin/**").access((auth, context) ->
                                 new AuthorizationDecision(adminAccess.isAllowed(auth.get())))
                         .anyRequest().denyAll())
@@ -114,6 +118,7 @@ public class SecurityConfig {
         // Construct here, not as a Filter bean: Boot must not register it a second time outside CSRF.
         http.addFilterBefore(new LoginRequestFilter(limiter), UsernamePasswordAuthenticationFilter.class);
         http.addFilterBefore(new UploadAdmissionFilter(storage), org.springframework.security.web.csrf.CsrfFilter.class);
+        http.addFilterAfter(new ProgressReceiveFilter(), org.springframework.security.web.access.intercept.AuthorizationFilter.class);
         http.addFilterAfter(new UploadReceiveFilter(), org.springframework.security.web.access.intercept.AuthorizationFilter.class);
         http.addFilterBefore(new RegistrationRequestFilter(new LoginAttemptLimiter(registrationAttempts,
                 registrationClients, DurationStyle.detectAndParse(registrationWindow))),

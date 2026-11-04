@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
 
 import java.net.URI;
+import com.example.online_reader.book.progress.ProgressHttp;
 import java.util.Map;
 
 /** Only the error status is trusted; never render exception/message/path/query/BindingResult attributes. */
@@ -19,14 +20,16 @@ import java.util.Map;
 @RequestMapping("/error")
 public class HttpErrorController implements ErrorController {
     @RequestMapping(produces = MediaType.TEXT_HTML_VALUE)
-    public ModelAndView html(HttpServletRequest request) {
+    public Object html(HttpServletRequest request) {
         var status = status(request);
+        if(ProgressHttp.api(request))return ProgressHttp.response(status.value(),null);
         return new ModelAndView("error", Map.of("status", status.value(), "errorTitle", message(status)), status);
     }
 
     @RequestMapping
-    public ResponseEntity<ProblemDetail> problem(HttpServletRequest request) {
+    public ResponseEntity<?> problem(HttpServletRequest request) {
         var status = status(request);
+        if(ProgressHttp.api(request))return ProgressHttp.response(status.value(),null);
         var problem = ProblemDetail.forStatusAndDetail(status, message(status));
         problem.setInstance(URI.create("/error")); // Never copy the possibly sensitive original request URI.
         return ResponseEntity.status(status).contentType(MediaType.APPLICATION_PROBLEM_JSON).body(problem);

@@ -20,3 +20,8 @@
 
 /* Canonical LF stays in DOM/locator text; block margins supply its visual spacing. */
 .reader-text .reader-separator { display: none; }
+
+.reader #progress-status { position: sticky; top: 0; z-index: 1; padding: .5rem; margin-top: 1rem; background: #fff; border: 1px solid #aaa; }
+.reader #progress-actions { margin-bottom: 1rem; }
+.reader #progress-actions[hidden], .reader [hidden] { display: none; }
+.reader #progress-actions:focus-visible { outline: 3px solid #174c80; outline-offset: 4px; }

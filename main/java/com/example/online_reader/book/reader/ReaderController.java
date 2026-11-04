@@ -1,6 +1,8 @@
 package com.example.online_reader.book.reader;
 
 import com.example.online_reader.book.service.BookService;
+import com.example.online_reader.book.progress.*;
+import com.example.online_reader.security.CurrentAccount;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
@@ -15,15 +17,22 @@ import java.util.Map;
 public class ReaderController {
     private final BookReader reader;
     private final BookService books;
-    public ReaderController(BookReader reader,BookService books){this.reader=reader;this.books=books;}
+    private final ProgressService progress;private final RangeProof proofs;private final CurrentAccount account;
+    public ReaderController(BookReader reader,BookService books,ProgressService progress,RangeProof proofs,CurrentAccount account){this.reader=reader;this.books=books;this.progress=progress;this.proofs=proofs;this.account=account;}
     @GetMapping("/read")
     ModelAndView read(@PathVariable Long id,@RequestParam(required=false) String chapter,
-                      @RequestParam(defaultValue="0") int offset,@RequestParam(required=false) String fingerprint,
+                      @RequestParam(required=false) Integer offset,@RequestParam(required=false) String fingerprint,
                       @RequestParam(required=false) Integer version,@RequestParam(defaultValue="normal") BookReader.Font font,
                       @RequestParam(required=false) String anchor) {
         if(id<1)throw new BookReader.Failure(400);
-        var page=reader.read(id,chapter,offset,fingerprint,version,font,anchor);
-        return new ModelAndView("library/reader",Map.of("page",page,"book",books.detail(id)));
+        var saved=progress.load(id);
+        if(chapter==null && offset==null && fingerprint==null && version==null && anchor==null && saved.position()!=null) {
+            var position=saved.position();chapter=position.chapter();offset=position.offset();fingerprint=position.fingerprint();version=position.version();
+        }
+        var page=reader.read(id,chapter,offset==null?0:offset,fingerprint,version,font,anchor);
+        var position=new ReadingPosition(page.chapter(),page.offset(),page.fingerprint(),BookReader.VERSION);
+        String proof=proofs.issue(account.requireId(),id,position,page.offset(),page.next());
+        return new ModelAndView("library/reader",Map.of("page",page,"book",books.detail(id),"progress",saved,"proof",proof));
     }
     @GetMapping("/resources/{index}")
     ResponseEntity<?> image(@PathVariable Long id,@PathVariable int index,@RequestParam(required=false) String fingerprint,

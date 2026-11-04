@@ -70,8 +70,9 @@ Thymeleaf form actions; их не выносить в URL/логи. Два бю�
 только после CSRF. Тесты missing/invalid/cross-session token доказывают отказ до
 записи аккаунта/аутентификации/выхода. GET logout не завершает сессию.
 
-Текущие mutations — регистрация, login и logout. Новые endpoints в #19/#22/#25/#26
-требуют CSRF и server-side authority/owner независимо от client validation.
+Текущие mutations — регистрация, login/logout, upload/metadata/delete книги и
+progress PUT. Все требуют native CSRF и server-side authority/owner независимо
+от client validation; тот же контракт обязателен для будущих заметок #26.
 Не добавляйте CORS/CSRF exclusions или trusted forwarded headers без задачи.
 
 ## HTTP ответы
@@ -154,3 +155,8 @@ account/owner/READY до storage. TXT/EPUB получают проверенны
 не участвуют в маршруте или disposition. Публичной выдачи storage/inline HTML/XML/SVG
 нет. Real HTTP tests проверяют байты, headers и foreign User/Admin404, ошибки CSRF/size.
 Подробности —[book-files.md](book-files.md); reader content sanitization и private PNG/JPEG реализованы в [reader.md](reader.md).
+
+Progress API GET/PUT использует session/native CSRF и фиксированные JSON code/message,
+не меняя UI-контракт остальных маршрутов. JSON receiver после security ≤2КиБ/5с,
+FormContentFilter выключен и runtime guarded. Политика —[progress.md](progress.md),
+канонический HTTP-контракт —[openapi.yaml](openapi.yaml).

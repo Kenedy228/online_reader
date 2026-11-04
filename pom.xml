@@ -231,6 +231,7 @@
                                 <include>**/PostgresMigrationsIT.java</include>
                                 <include>**/RegistrationPostgresIT.java</include>
                                 <include>**/BookPostgresIT.java</include>
+                                <include>**/ProgressPostgresIT.java</include>
                             </includes>
                         </configuration>
                         <executions>

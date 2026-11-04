@@ -19,7 +19,7 @@ production-ready состоянию с проверяемыми сборкой, 
   видимости пароля и заготовки моделей аккаунтов. Вход через JPA/BCrypt и сессия реализованы;
   регистрация с обязательным email реализована; основа ролей и owner-проверки библиотеки
   реализованы. Загрузка/хранение/скачивание и чтение EPUB+TXT реализованы;
-  прогресс и заметки ещё не реализованы;
+  прогресс сохраняется; заметки ещё не реализованы;
   #17 остаётся открытой до проверки владельца этих ресурсов.
 
 ## Приоритет инструкций и источники требований
@@ -89,7 +89,8 @@ username/роли/флагов, owner-scoped SQL и блокировки с @Ver
 из HTTP и не добавляйте admin bypass. V5 хранит UUID/fingerprint/размер исходника;
 формы меняют только title/author, stale version возвращает409. DELETING закрывает
 карточку/запись, но сохраняет источник и резерв квоты до подтверждённой физической очистки.
-Прогресс/заметки пока отсутствуют; #19 остаётся открытой до связанного удаления.
+Прогресс удаляется атомарно с DELETING; заметки ещё отсутствуют. #19 остаётся
+открытой до связанного удаления заметок из #26.
 Контракт и пределы проверок — [docs/library.md](docs/library.md).
 
 ## HTTP security и ошибки
@@ -341,4 +342,21 @@ Locator v1 = source SHA-256 + spine key + Unicode offset; TXT BOM/newline и XHT
 ограничены 16 384 code points, parser — двумя запросами/10 с без очереди;
 не убирайте лимиты XML/ZIP/форматирования или read pins ради отображения книги.
 Потоки изображений держат permit и pin до close, включая HEAD и ошибки.
-Прогресс/заметки ещё не сохраняются. Контракт и ошибки — docs/reader.md.
+Прогресс сохраняется по [docs/progress.md](docs/progress.md); заметки ещё не реализованы. Контракт чтения —docs/reader.md.
+
+
+## Прогресс
+
+`book.progress` и V7 сохраняют одну owner-bound позицию на книгу с server revision.
+HTTP/OpenAPI —docs/openapi.yaml, поведение/restore/proof/deletion —docs/progress.md.
+Не доверяйте owner_id/total/client timestamp; mutation использует owner-scoped
+lockReady до загрузки Book, затем CAS. Предварительный download в этой транзакции
+создаёт stale managed snapshot при ожидании delete. Progress удаляется в первом
+DB commit логического удаления, не после filesystem cleanup.
+HMAC range proof выдаёт только сервер после BookReader; это не authorization.
+Смена процесса инвалидирует proof, но не stored locator. Не переносите ключ в
+репозиторий/браузер и не заменяйте bounded proof на повторный full parsing каждые2с.
+API JSON receiver после auth/CSRF ограничен2КиБ/5с; FormContentFilter выключен и
+runtime-guarded. Не возвращайте pre-security PUT form parsing. TS хранит один
+in-flight save, debounce2с и видимый error state; ошибка отменяет timers/старый ACK,
+409 требует явного выбора. Не добавляйте silent retry/last-timestamp-wins.
