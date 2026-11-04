@@ -18,8 +18,8 @@ production-ready состоянию с проверяемыми сборкой, 
 - Сейчас есть страницы главной, входа и регистрации, клиентское переключение
   видимости пароля и заготовки моделей аккаунтов. Вход через JPA/BCrypt и сессия реализованы;
   регистрация с обязательным email реализована; основа ролей и owner-проверки библиотеки
-  реализованы. Загрузка/хранение/скачивание EPUB+TXT реализованы; чтение, прогресс
-  и заметки ещё не реализованы;
+  реализованы. Загрузка/хранение/скачивание и чтение EPUB+TXT реализованы;
+  прогресс и заметки ещё не реализованы;
   #17 остаётся открытой до проверки владельца этих ресурсов.
 
 ## Приоритет инструкций и источники требований
@@ -107,7 +107,7 @@ dispatch рендерит фиксированный HTML/ProblemDetail чере
 Формы сохраняют HTML validation200/PRG, ошибку login302 и rate429 контракты.
 Политика/ограничения: [docs/http-security.md](docs/http-security.md). Реальные
 owner/MIME/disposition/cache/active-content проверки download — в #22.
-Reader sanitization и приватная выдача ресурсов ещё требуют #23.
+Reader sanitization и приватная выдача PNG/JPEG реализованы: [docs/reader.md](docs/reader.md).
 
 ## Структура и ответственность
 
@@ -326,5 +326,19 @@ marker только после удаления bytes и завершения re
 при ошибке storage и не воскрешайте DELETING. Будущие progress/notes удаляйте при
 первом DELETING commit (#25/#26). Исходники выдаются GET/HEAD owner+READY query до
 I/O, attachment с server filename, проверенным MIME, nosniff/no-store; raw EPUB
-XHTML/CSS/JS не становится страницей приложения. Reader sanitization —#23.
+XHTML/CSS/JS не становится страницей приложения. Reader policy —[docs/reader.md](docs/reader.md).
 Подробности, abuse cases, budgets и ограничения —[docs/book-files.md](docs/book-files.md).
+
+
+## Читалка
+
+`book.reader` реконструирует только безопасную разметку, `th:utext` разрешён
+лишь для результата BookReader, никогда для исходного XHTML. Не копируйте
+атрибуты/URLs/CSS/JS книги и не расширяйте CSP. Каждый read/resources запрос
+проходит live owner/READY policy до storage; PNG/JPEG остаются приватными.
+Locator v1 = source SHA-256 + spine key + Unicode offset; TXT BOM/newline и XHTML
+нормализация — контракт для #25/#26, не меняйте её без новой версии. Страницы
+ограничены 16 384 code points, parser — двумя запросами/10 с без очереди;
+не убирайте лимиты XML/ZIP/форматирования или read pins ради отображения книги.
+Потоки изображений держат permit и pin до close, включая HEAD и ошибки.
+Прогресс/заметки ещё не сохраняются. Контракт и ошибки — docs/reader.md.

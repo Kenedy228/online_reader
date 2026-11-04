@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+    <title th:text="|${book.title} — Чтение — ДостоRead|"></title>
+    <link rel="stylesheet" th:href="@{/styles/styles.css}">
+    <link rel="stylesheet" th:href="@{/styles/header.css}">
+    <link rel="stylesheet" th:href="@{/styles/library.css}">
+    <link rel="stylesheet" th:href="@{/styles/reader.css}">
+</head>
+<body>
+<a class="skip-link" href="#book-text">К тексту книги</a>
+<header th:replace="~{components/header :: header}"></header>
+<main id="main" class="library reader" tabindex="-1">
+    <a th:href="@{/library/books/{id}(id=${book.id})}">Карточка книги</a>
+    <h1 th:text="${book.title}"></h1>
+    <p th:unless="${#strings.isEmpty(book.author)}" th:text="${book.author}"></p>
+    <details th:if="${!page.toc.empty}" class="reader-toc">
+        <summary>Оглавление</summary>
+        <nav aria-label="Оглавление книги"><ol>
+            <li th:each="item : ${page.toc}"><a th:href="${page.link(item.chapter,0,item.anchor)}" th:text="${item.label}"></a></li>
+        </ol></nav>
+    </details>
+    <form method="get" th:action="@{/library/books/{id}/read(id=${book.id})}" class="reader-settings">
+        <input type="hidden" name="chapter" th:value="${page.chapter}"><input type="hidden" name="offset" th:value="${page.offset}">
+        <input type="hidden" name="fingerprint" th:value="${page.fingerprint}"><input type="hidden" name="version" value="1">
+        <label for="reader-font">Размер текста</label>
+        <select id="reader-font" name="font">
+            <option value="normal" th:selected="${page.font.name() == 'normal'}">Обычный</option>
+            <option value="large" th:selected="${page.font.name() == 'large'}">Крупный</option>
+            <option value="largest" th:selected="${page.font.name() == 'largest'}">Очень крупный</option>
+        </select>
+        <button type="submit">Применить</button>
+    </form>
+    <h2 th:text="${page.label}"></h2>
+    <p th:if="${page.total > 0}" class="book-meta" th:text="|Фрагмент: ${page.offset + 1}–${page.next} из ${page.total} символов|"></p>
+    <p th:if="${page.total == 0}">В этой главе нет текста для отображения. Выберите другую главу в оглавлении.</p>
+    <!-- Only BookReader's reconstructed, escaped markup is trusted here; never original XHTML. -->
+    <article id="book-text" class="reader-text" th:classappend="${'font-' + page.font.name()}" tabindex="-1" aria-label="Текст книги"
+             th:attr="data-chapter=${page.chapter},data-offset=${page.offset},data-fingerprint=${page.fingerprint},data-version=1" th:utext="${page.html}"></article>
+    <nav class="pagination" aria-label="Фрагменты книги">
+        <a th:if="${page.previous()}" th:href="${page.link(page.chapter,page.previousOffset(),null)}" rel="prev">Предыдущий фрагмент</a>
+        <a th:if="${page.following()}" th:href="${page.link(page.chapter,page.next,null)}" rel="next">Следующий фрагмент</a>
+        <p th:unless="${page.following()}">Конец главы</p>
+    </nav>
+    <nav class="pagination" aria-label="Главы книги" th:if="${page.chapters.size() > 1}">
+        <a th:if="${page.index > 0}" th:href="${page.link(page.chapters[page.index - 1].key,0,null)}">Предыдущая глава</a>
+        <a th:if="${page.index + 1 < page.chapters.size()}" th:href="${page.link(page.chapters[page.index + 1].key,0,null)}">Следующая глава</a>
+    </nav>
+    <p class="reader-note">Позиция находится в адресе страницы. Сохранение прогресса между сеансами пока недоступно.</p>
+</main></body></html>

@@ -42,7 +42,7 @@ public class SecurityConfig {
             "/assets/goal.png", "/assets/hide.png", "/assets/logo.svg", "/assets/show.png",
             "/styles/footer.css", "/styles/header.css", "/styles/index.css", "/styles/login.css",
             "/styles/registration.css", "/styles/styles.css",
-            "/styles/error.css", "/styles/library.css",
+            "/styles/error.css", "/styles/library.css", "/styles/reader.css",
             "/js/bookUpload.bundle.js",
             "/js/passwordVisibilityChangerForLogin.bundle.js",
             "/js/passwordVisibilityChangerForRegistration.bundle.js"
@@ -92,8 +92,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/login", "/registration").permitAll()
                         .requestMatchers(HttpMethod.GET, PUBLIC_RESOURCES).permitAll()
                         .requestMatchers(HttpMethod.HEAD, PUBLIC_RESOURCES).permitAll()
-                        .requestMatchers(HttpMethod.GET, "/library/upload", "/library/books/{id}/download").authenticated()
-                        .requestMatchers(HttpMethod.HEAD, "/library/upload", "/library/books/{id}/download").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/library/upload", "/library/books/{id}/download", "/library/books/{id}/read", "/library/books/{id}/resources/{index}").authenticated()
+                        .requestMatchers(HttpMethod.HEAD, "/library/upload", "/library/books/{id}/download", "/library/books/{id}/read", "/library/books/{id}/resources/{index}").authenticated()
                         .requestMatchers(HttpMethod.POST, "/library/upload").authenticated()
                         .requestMatchers(HttpMethod.GET, "/library", "/library/books/{id}", "/library/books/{id}/edit", "/library/books/{id}/delete").authenticated()
                         .requestMatchers(HttpMethod.HEAD, "/library", "/library/books/{id}", "/library/books/{id}/edit", "/library/books/{id}/delete").authenticated()

@@ -68,5 +68,6 @@ public class Book {
     public long getOriginalSize() { return originalSize; }
     public Instant getCreatedAt() { return createdAt; }
     public long getVersion() { return version; }
+    public String getSourceSha256() { return sourceSha256; }
     public UUID getStorageKey() { return storageKey; }
 }

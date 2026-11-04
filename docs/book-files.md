@@ -63,7 +63,7 @@ IDPF font obfuscation на manifest font resource, который не явля�
 шрифт не декодируется и не выдаётся. Это не DRM support. Профиль ограничен и не
 означает полной EPUB conformance. Книги могут содержать авторский script/CSS/SVG:
 здесь они остаются непрозрачными байтами исходника, не исполняются/не загружаются.
-Преобразование и безопасная выдача для чтения —#23, raw XML/XHTML не становится HTML origin.
+Преобразование и безопасная выдача для чтения —[reader.md](reader.md); raw XML/XHTML не становится HTML origin.
 
 Выбраны pinned Apache Commons Compress1.28.0 (ZIP metadata/symlinks/statistics)
 и Commons FileUpload1.6.0 (streaming multipart без Servlet adapters). FileUpload

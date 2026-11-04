@@ -1,0 +1,8 @@
+<!doctype html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{library/shared :: head('Чтение недоступно')}"></head>
+<body><a class="skip-link" href="#main">К содержимому</a>
+<header th:replace="~{components/header :: header}"></header>
+<main id="main" class="library" tabindex="-1"><h1>Чтение недоступно</h1>
+<p th:text="${readerError}"></p><p><a th:href="@{/library}">Моя библиотека</a></p></main>
+</body></html>

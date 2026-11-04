@@ -72,6 +72,7 @@ class BookFilesHttpTest {
         var response=upload(content.getBytes(StandardCharsets.UTF_8),"Текст.txt",token);
         assertThat(response.statusCode()).withFailMessage(response.body()).isEqualTo(303);
         String path=URI.create(response.headers().firstValue("Location").orElseThrow()).getPath();
+        var read=get(client,path+"/read");assertThat(read.statusCode()).isEqualTo(200);assertThat(read.body()).contains("&lt;script&gt;").doesNotContain("<script>alert");
         var download=get(client,path+"/download");
         assertThat(download.statusCode()).isEqualTo(200);assertThat(download.body()).isEqualTo(content);
         assertThat(download.headers().firstValue("Content-Type").orElseThrow()).startsWith("text/plain");
@@ -84,6 +85,7 @@ class BookFilesHttpTest {
             EpubFixtures.write(epub,EpubFixtures.content());var accepted=upload(Files.readAllBytes(epub),"Книга.epub",token);
             assertThat(accepted.statusCode()).withFailMessage(accepted.body()).isEqualTo(303);
             var bytes=client.send(HttpRequest.newBuilder(URI.create(base()).resolve(accepted.headers().firstValue("Location").orElseThrow()+"/download")).GET().build(),HttpResponse.BodyHandlers.ofByteArray());
+            var reader=get(client,URI.create(accepted.headers().firstValue("Location").orElseThrow()).getPath()+"/read");assertThat(reader.statusCode()).isEqualTo(200);assertThat(reader.body()).contains("Синтетическая книга");
             assertThat(bytes.statusCode()).isEqualTo(200);assertThat(bytes.body()).isEqualTo(Files.readAllBytes(epub));
             assertThat(bytes.headers().firstValue("Content-Type").orElseThrow()).isEqualTo("application/epub+zip");
         }finally{Files.deleteIfExists(epub);}
