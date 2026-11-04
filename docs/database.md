@@ -8,7 +8,10 @@ User/Admin/Action и связующей таблице admin_actions. V2 рас�
 автоматически, legacy admin/actions/links сохраняются. Назначение роли —
 [authorization.md](authorization.md). V3 добавляет users.email: UNIQUE и канонический lowercase/trim, NULL сохраняется
 для legacy, новые регистрации требуют email через service/DTO. Правила переноса —
-[registration.md](registration.md). Seed-аккаунтов и универсальных паролей нет.
+[registration.md](registration.md). V5 добавляет books с FK владельца, метаданными,
+неизменяемым source reference, состоянием и версией; ограничения/индексы,
+логическое удаление и восстановление —[library.md](library.md).
+Seed-аккаунтов и универсальных паролей нет.
 
 ## Запуск и изменение схемы
 
@@ -27,7 +30,7 @@ PostgreSQL-контракт проверяется отдельно, без по
 - Перед изменением типа, NOT NULL, UNIQUE, FK или удалением данных проверяйте
   совместимость существующих записей и составляйте план восстановления.
 - V1 только создаёт новую схему. Повторный запуск с её историей — no-op;
-  данные и ограничения сохраняются. Новых доменных сущностей пока нет.
+  данные и ограничения сохраняются. Новые сущности добавляются следующими версиями.
 
 ## Непустая БД без Flyway history
 
@@ -64,12 +67,15 @@ restore вместе с файлами книг остаётся [#28](https://g
 ```
 
 Первая команда запускает изолированную H2 suite. Вторая дополнительно запускает
-`PostgresMigrationsIT` на disposable PostgreSQL17: пустая БД → V1→V2→V3→V4 → Hibernate
+`PostgresMigrationsIT` на disposable PostgreSQL17: пустая БД → V1→V2→V3→V4→V5 → Hibernate
 validate и JPA-запись; UNIQUE/NOT NULL/длина/FK; повторный migrate с существующей
 записью без потери данных; преобразование legacy BCrypt и транзакционный rollback
 при неизвестном формате пароля; V2→V3 с сохранением legacy NULL/flags/hash,
 email UNIQUE/CHECK. RegistrationPostgresIT проверяет гонки регистрации по
 username/email на настоящем сервисе/JPA и неизменность победившего аккаунта;
 V3→V4 сохраняет legacy данные и проверяет role CHECK/default, provider читает
-сохранённую роль, а live policy отказывает после её снятия. Используется закреплённый image digest; Docker обязателен.
+сохранённую роль, а live policy отказывает после её снятия. BookPostgresIT проверяет
+ограничения books, owner queries,200 Unicode code points, конкурентные изменения
+и сохранение source reference после логического удаления.
+Используется закреплённый image digest; Docker обязателен.
 При ошибке Docker или PostgreSQL fallback к dev/H2 отсутствует.

@@ -7,6 +7,7 @@
         <nav aria-label="Основная навигация">
             <ul>
                 <li><a th:href="@{/}">Главная</a></li>
+                <li sec:authorize="isAuthenticated()"><a th:href="@{/library}">Моя библиотека</a></li>
                 <li sec:authorize="isAnonymous()"><a th:href="@{/login}">Вход в аккаунт</a></li>
                 <li sec:authorize="isAuthenticated()"><span class="header-username" sec:authentication="name"></span></li>
                 <li sec:authorize="isAuthenticated()">

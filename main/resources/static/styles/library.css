@@ -1,0 +1,29 @@
+.library { width: min(52rem, calc(100% - 2rem)); margin: 2rem auto 4rem; color: #202020; font: 1rem/1.6 var(--GeorgiaFF), serif; overflow-wrap: anywhere; }
+.library * { margin: 0; }
+.library h1 { font-size: 2rem; line-height: 1.25; margin: 1.5rem 0; }
+.library h2 { font-size: 1.25rem; line-height: 1.4; }
+.library a { color: #174c80; text-underline-offset: .2em; }
+.library a:hover { text-decoration-thickness: .15em; }
+.library a:focus-visible, .library input:focus-visible, .library button:focus-visible, .skip-link:focus-visible { outline: 3px solid #174c80; outline-offset: 4px; }
+.library .book-list { list-style: none; padding: 0; margin: 1rem 0; }
+.book-list li { padding: 1.25rem 0; border-bottom: 1px solid #aaa; }
+.library .book-meta { color: #505050; margin-top: .4rem; }
+.library .pagination, .library .actions { display: flex; flex-wrap: wrap; align-items: center; gap: 1rem; margin-top: 1.5rem; }
+.library .pagination a, .library .actions a { padding: .5rem 0; }
+.library dl { margin: 1.5rem 0; }
+.library dt { font-weight: bold; margin-top: 1rem; }
+.library dd { margin-top: .2rem; }
+.library form { margin: 1.5rem 0; }
+.library label { display: block; font-weight: bold; margin-top: 1.25rem; }
+.library input[type="text"] { width: 100%; min-height: 2.75rem; border: 1px solid #666; border-radius: .25rem; padding: .6rem; font: inherit; }
+.library input[aria-invalid="true"] { border: 2px solid #9d1c1c; }
+.library button { background: #202020; color: white; border: 2px solid #202020; border-radius: .25rem; padding: .65rem 1.1rem; font: inherit; cursor: pointer; }
+.library .errors { border-left: 4px solid #9d1c1c; padding: 1rem; background: #fff1f1; }
+.library .errors ul { padding-left: 1.25rem; }
+.library .field-error { color: #9d1c1c; font-weight: bold; }
+.library .current-values { margin-top: 1.5rem; }
+.library .confirmation { padding: .5rem 0; }
+.library input[type="checkbox"] { width: 1.25rem; height: 1.25rem; vertical-align: middle; margin-right: .4rem; }
+.skip-link { position: absolute; left: 1rem; top: -10rem; background: white; color: #174c80; padding: .75rem; z-index: 1; }
+.skip-link:focus { top: 1rem; }
+@media (max-width: 25rem) { .library h1 { font-size: 1.7rem; } }

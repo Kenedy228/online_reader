@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{library/shared :: head('Изменить книгу')}"></head>
+<body>
+<a class="skip-link" href="#main">К содержимому</a>
+<header th:replace="~{components/header :: header}"></header>
+<main id="main" class="library" tabindex="-1">
+    <a th:href="@{/library/books/{id}(id=${book.id})}">К карточке книги</a>
+    <h1>Изменить книгу</h1>
+    <form method="post" th:action="@{/library/books/{id}/edit(id=${book.id})}" th:object="${metadata}">
+        <div th:if="${#fields.hasAnyErrors()}" class="errors" role="alert" tabindex="-1">
+            <p>Не удалось сохранить изменения.</p>
+            <ul><li th:each="error : ${#fields.globalErrors()}" th:text="${error}"></li></ul>
+            <p th:if="${#fields.hasErrors('version')}">Обновите форму по ссылке «К карточке книги».</p>
+        </div>
+        <input type="hidden" th:field="*{version}">
+        <label for="title">Название (обязательно)</label>
+        <p id="title-hint">До 200 символов.</p>
+        <input id="title" type="text" th:field="*{title}" required aria-describedby="title-hint title-error" th:attr="aria-invalid=${#fields.hasErrors('title')}">
+        <p id="title-error" class="field-error"><span th:errors="*{title}"></span></p>
+        <label for="author">Автор</label>
+        <p id="author-hint">Необязательно, до 200 символов.</p>
+        <input id="author" type="text" th:field="*{author}" aria-describedby="author-hint author-error" th:attr="aria-invalid=${#fields.hasErrors('author')}">
+        <p id="author-error" class="field-error"><span th:errors="*{author}"></span></p>
+        <p class="current-values">Сейчас сохранено: <span th:text="${book.title}"></span> / <span th:text="${#strings.isEmpty(book.author) ? 'Автор не указан' : book.author}"></span>.</p>
+        <div class="actions"><button type="submit">Сохранить</button><a th:href="@{/library/books/{id}(id=${book.id})}">Отмена</a></div>
+    </form>
+</main></body></html>
