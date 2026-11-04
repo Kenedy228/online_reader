@@ -93,6 +93,13 @@ V1 не изменяется. V2 транзакционно расширяет �
 отдельную процедуру сброса/переноса аккаунтов без раскрытия значений. Не удаляйте
 записи ради старта. Для новой пустой БД V1→V2 выполняются автоматически.
 
+## HTTP policy
+
+CSP/native headers/CSRF/error negotiation: [http-security.md](http-security.md).
+HTML anonymous denial перенаправляется на login, явный JSON Accept получает401;
+CSRF/access denial403 проходит safe ERROR dispatch. Native formLogin failure
+по-прежнему302/login?error, регистрация сохраняет HTML validation200/PRG.
+
 ## Проверки
 
 `make check`: JPA/encoder, все статусы отказа, CSRF/logout, лимит/параллельность,

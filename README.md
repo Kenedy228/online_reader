@@ -27,6 +27,10 @@ seed-пользователя нет. Email пока не подтверждае
 форматы книг, лимиты и точные границы MVP определяются в
 [issue #4](https://github.com/Kenedy228/online_reader/issues/4).
 
+HTTP headers/CSRF и безопасные HTML/ProblemDetail ошибки описаны в
+[docs/http-security.md](docs/http-security.md). CSP включена без unsafe-inline;
+политика выдачи пользовательских файлов ещё требует #22.
+
 ## Технологии
 
 - Java, Spring Boot и Spring MVC — сервер и обработка запросов.

@@ -99,6 +99,8 @@ public final class RuntimeEnvironmentPostProcessor implements EnvironmentPostPro
         expected(environment, "server.error.include-message", "never");
         expected(environment, "server.error.include-binding-errors", "never");
         expected(environment, "server.error.include-exception", "false");
+        expected(environment, "server.error.path", "/error");
+        expected(environment, "server.error.whitelabel.enabled", "false");
 
         // Both supported runtime profiles use a local Mailpit sink, never a delivery provider.
         String host = required(environment, "spring.mail.host");
