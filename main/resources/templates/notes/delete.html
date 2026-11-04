@@ -1,0 +1,14 @@
+<!doctype html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{library/shared :: head('Удалить заметку')}"></head>
+<body><a class="skip-link" href="#main">К содержимому</a><header th:replace="~{components/header :: header}"></header>
+<main id="main" class="library" tabindex="-1">
+    <h1>Удалить заметку?</h1><h2 th:text="${book.title}"></h2><nav th:replace="~{notes/shared :: navigation(${book})}"></nav>
+    <p class="note-text" th:text="${current.text}"></p><p>Заметка будет удалена без возможности отмены.</p>
+    <form method="post" th:action="@{/library/books/{id}/notes/{noteId}/delete(id=${book.id},noteId=${current.id})}" th:object="${deletion}">
+        <div th:replace="~{notes/shared :: errors}"></div><input type="hidden" name="version" th:value="${deletion.version}">
+        <label><input type="checkbox" name="confirmed" value="true" required th:checked="${deletion.confirmed}" aria-describedby="confirmed-error" th:attr="aria-invalid=${#fields.hasErrors('confirmed')}"> Подтверждаю удаление заметки</label>
+        <p id="confirmed-error" class="field-error"><span th:errors="*{confirmed}"></span></p>
+        <div class="actions"><button type="submit">Удалить заметку</button><a th:href="@{/library/books/{id}/notes/{noteId}(id=${book.id},noteId=${current.id})}">Отмена</a></div>
+    </form>
+</main></body></html>

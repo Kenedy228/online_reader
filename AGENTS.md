@@ -19,7 +19,7 @@ production-ready состоянию с проверяемыми сборкой, 
   видимости пароля и заготовки моделей аккаунтов. Вход через JPA/BCrypt и сессия реализованы;
   регистрация с обязательным email реализована; основа ролей и owner-проверки библиотеки
   реализованы. Загрузка/хранение/скачивание и чтение EPUB+TXT реализованы;
-  прогресс сохраняется; заметки ещё не реализованы;
+  прогресс и личные заметки реализованы;
   #17 остаётся открытой до проверки владельца этих ресурсов.
 
 ## Приоритет инструкций и источники требований
@@ -89,8 +89,8 @@ username/роли/флагов, owner-scoped SQL и блокировки с @Ver
 из HTTP и не добавляйте admin bypass. V5 хранит UUID/fingerprint/размер исходника;
 формы меняют только title/author, stale version возвращает409. DELETING закрывает
 карточку/запись, но сохраняет источник и резерв квоты до подтверждённой физической очистки.
-Прогресс удаляется атомарно с DELETING; заметки ещё отсутствуют. #19 остаётся
-открытой до связанного удаления заметок из #26.
+Progress и notes удаляются атомарно с первым DELETING commit. Приёмка owner/delete
+umbrella #17/#19 выполняется после merge заметок #26.
 Контракт и пределы проверок — [docs/library.md](docs/library.md).
 
 ## HTTP security и ошибки
@@ -342,7 +342,7 @@ Locator v1 = source SHA-256 + spine key + Unicode offset; TXT BOM/newline и XHT
 ограничены 16 384 code points, parser — двумя запросами/10 с без очереди;
 не убирайте лимиты XML/ZIP/форматирования или read pins ради отображения книги.
 Потоки изображений держат permit и pin до close, включая HEAD и ошибки.
-Прогресс сохраняется по [docs/progress.md](docs/progress.md); заметки ещё не реализованы. Контракт чтения —docs/reader.md.
+Прогресс сохраняется по [docs/progress.md](docs/progress.md); заметки реализованы по docs/notes.md. Контракт чтения —docs/reader.md.
 
 
 ## Прогресс
@@ -360,3 +360,20 @@ API JSON receiver после auth/CSRF ограничен2КиБ/5с; FormConten
 runtime-guarded. Не возвращайте pre-security PUT form parsing. TS хранит один
 in-flight save, debounce2с и видимый error state; ошибка отменяет timers/старый ACK,
 409 требует явного выбора. Не добавляйте silent retry/last-timestamp-wins.
+
+
+## Заметки
+
+`book.notes` и V8: plain text≤2000 Unicode CP,≤200/book, pagination20/max50;
+HTML/Markdown/sharing нет. Формы server-rendered Thymeleaf с native CSRF/POST303,
+не новый JSON API. Notes owner query включает noteId/bookId/ownerId, Admin override
+нет. Все mutations сначала lockReady, quota/revision под book lock; JPA @Version.
+Не загружайте Book перед lockReady в той же transaction. Note locator immutable;
+stale locator не скрывает текст, но отключает reader link. Proof renewal после
+restart не записывает note автоматически:409,draft retained, explicit resubmit.
+Note form binders отключают header binding; URI bookId/noteId имеют только
+@PathVariable authority и не имеют DTO setter. Form setters нормализуютCRLF доCodePointLength: native textarea иначе считает
+переносы дважды. Не ставьте maxlength2000 UTF-16; current maxlength4000+CPcounter.
+Ошибка сохраняет native draft; oversized echo bounded8192 с предупреждением,
+не используйте rejectedValue для textarea/hidden locator. Текст только th:text;
+постоянные error ID нужны aria-describedby. Политика/rollback —docs/notes.md.

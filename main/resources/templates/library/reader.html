@@ -38,7 +38,8 @@
     <p th:if="${page.total > 0}" class="book-meta" th:text="|Фрагмент: ${page.offset + 1}–${page.next} из ${page.total} символов|"></p>
     <p th:if="${page.total == 0}">В этой главе нет текста для отображения. Выберите другую главу в оглавлении.</p>
     <p id="progress-status" role="status" aria-live="polite"><span id="progress-message">Автосохранение ещё не включено.</span>
-        <a th:href="@{/library}">Библиотека</a> <a href="#reader-settings" id="progress-font">Настроить шрифт</a>
+        <a th:href="@{/library}">Библиотека</a> <a id="reader-note" th:href="@{/library/books/{id}/notes/new(id=${book.id},chapter=${page.chapter},offset=${page.offset},fingerprint=${page.fingerprint},version=1,proof=${proof})}">Заметка</a>
+        <a href="#reader-settings" id="progress-font">Настроить шрифт</a>
         <a href="#progress-actions" id="progress-manage" hidden>Управление сохранением</a></p>
     <div id="progress-actions" class="actions" tabindex="-1" hidden>
         <button type="button" id="progress-save">Сохранить позицию</button>

@@ -35,7 +35,7 @@ class PostgresMigrationsIT {
     void migratesEmptyDatabaseAndValidatesJpaMappings() {
         Flyway flyway = migrate("schema_" + UUID.randomUUID().toString().replace("-", ""));
         var settings = new Configuration()
-                .addAnnotatedClass(User.class).addAnnotatedClass(Admin.class).addAnnotatedClass(Action.class).addAnnotatedClass(Book.class).addAnnotatedClass(com.example.online_reader.book.progress.ReadingProgress.class).addAnnotatedClass(com.example.online_reader.book.model.BookStorageBinding.class)
+                .addAnnotatedClass(User.class).addAnnotatedClass(Admin.class).addAnnotatedClass(Action.class).addAnnotatedClass(Book.class).addAnnotatedClass(com.example.online_reader.book.notes.BookNote.class).addAnnotatedClass(com.example.online_reader.book.progress.ReadingProgress.class).addAnnotatedClass(com.example.online_reader.book.model.BookStorageBinding.class)
                 .setProperty("jakarta.persistence.jdbc.url", DATABASE.getJdbcUrl())
                 .setProperty("jakarta.persistence.jdbc.user", DATABASE.getUsername())
                 .setProperty("jakarta.persistence.jdbc.password", DATABASE.getPassword())
@@ -64,12 +64,26 @@ class PostgresMigrationsIT {
             Integer owner=jdbc.queryForObject("insert into users(username,password) values ('progress-upgrade',?) returning id",Integer.class,HASH);
             UUID key=UUID.randomUUID();
             Long book=jdbc.queryForObject("insert into books(owner_id,title,format,state,original_size,source_sha256,storage_key) values (?,'Existing book','TXT','READY',7,?,?) returning id",Long.class,owner,"a".repeat(64),key);
-            var after=Flyway.configure().dataSource(DATABASE.getJdbcUrl(),DATABASE.getUsername(),DATABASE.getPassword()).schemas(schema).defaultSchema(schema).load();
+            var after=Flyway.configure().dataSource(DATABASE.getJdbcUrl(),DATABASE.getUsername(),DATABASE.getPassword()).schemas(schema).defaultSchema(schema).target("7").load();
             assertThat(after.migrate().migrationsExecuted).isEqualTo(1);
             assertThat(jdbc.queryForObject("select storage_key from books where id=?",UUID.class,book)).isEqualTo(key);
             assertThat(jdbc.queryForObject("select count(*) from reading_progress",Integer.class)).isZero();
             jdbc.update("insert into reading_progress(book_id,owner_id,chapter,position_offset,fingerprint,representation_version,revision) values (?,?,'text',3,?,1,1)",book,owner,"a".repeat(64));
             assertThat(jdbc.queryForObject("select position_offset from reading_progress where book_id=?",Integer.class,book)).isEqualTo(3);
+        }
+    }
+
+    @Test void eighthMigrationPreservesProgressAndAddsEmptyOwnerScopedNotes()throws Exception {
+        String schema="notes_"+UUID.randomUUID().toString().replace("-","");
+        Flyway.configure().dataSource(DATABASE.getJdbcUrl(),DATABASE.getUsername(),DATABASE.getPassword()).schemas(schema).defaultSchema(schema).target("7").load().migrate();
+        try(var connection=DriverManager.getConnection(DATABASE.getJdbcUrl(),DATABASE.getUsername(),DATABASE.getPassword())) {
+            connection.setSchema(schema);var jdbc=new org.springframework.jdbc.core.JdbcTemplate(new org.springframework.jdbc.datasource.SingleConnectionDataSource(connection,true));
+            Integer owner=jdbc.queryForObject("insert into users(username,password) values ('notes-upgrade',?) returning id",Integer.class,HASH);
+            Long book=jdbc.queryForObject("insert into books(owner_id,title,format,state,original_size,source_sha256,storage_key) values (?,'Existing','TXT','READY',7,?,?) returning id",Long.class,owner,"a".repeat(64),UUID.randomUUID());
+            jdbc.update("insert into reading_progress(book_id,owner_id,chapter,position_offset,fingerprint,representation_version,revision) values (?,?,'text',2,?,1,3)",book,owner,"a".repeat(64));
+            assertThat(Flyway.configure().dataSource(DATABASE.getJdbcUrl(),DATABASE.getUsername(),DATABASE.getPassword()).schemas(schema).defaultSchema(schema).load().migrate().migrationsExecuted).isEqualTo(1);
+            assertThat(jdbc.queryForObject("select revision from reading_progress where book_id=?",Integer.class,book)).isEqualTo(3);
+            assertThat(jdbc.queryForObject("select count(*) from book_notes",Integer.class)).isZero();
         }
     }
 
@@ -322,7 +336,7 @@ class PostgresMigrationsIT {
         Flyway flyway = Flyway.configure().dataSource(DATABASE.getJdbcUrl(),
                         DATABASE.getUsername(), DATABASE.getPassword())
                 .defaultSchema(schema).schemas(schema).cleanDisabled(true).load();
-        assertThat(flyway.migrate().migrationsExecuted).isEqualTo(7);
+        assertThat(flyway.migrate().migrationsExecuted).isEqualTo(8);
         flyway.validate();
         return flyway;
     }

@@ -143,6 +143,16 @@ if (article && message && actions && manage && saveButton && loadLink && replace
             url.hash = 'reader-settings'; window.location.assign(url.href);
         });
     });
+    const noteLink = document.querySelector<HTMLAnchorElement>('#reader-note');
+    noteLink?.addEventListener('click', event => {
+        event.preventDefault();
+        void navigate(() => {
+            const url = new URL(noteLink.href);
+            url.searchParams.set('chapter', current.chapter); url.searchParams.set('offset', String(current.offset));
+            url.searchParams.set('fingerprint', current.fingerprint); url.searchParams.set('version', String(current.version));
+            url.searchParams.set('proof', proof); window.location.assign(url.href);
+        });
+    });
     document.addEventListener('click', event => {
         const link = event.target instanceof Element ? event.target.closest<HTMLAnchorElement>('a[href]') : null;
         if (!link || link === loadLink || event.defaultPrevented || event.button !== 0 || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey || link.target || link.hasAttribute('download')) return;

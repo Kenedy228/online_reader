@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{library/shared :: head('Заметки книги')}"></head>
+<body><a class="skip-link" href="#main">К содержимому</a><header th:replace="~{components/header :: header}"></header>
+<main id="main" class="library" tabindex="-1">
+    <h1>Заметки книги</h1><h2 th:text="${book.title}"></h2><nav th:replace="~{notes/shared :: navigation(${book})}"></nav>
+    <p><a th:href="@{/library/books/{id}/notes/new(id=${book.id})}">Добавить заметку</a></p>
+    <p th:if="${notes.empty}">Заметок пока нет. Добавьте первую во время чтения.</p>
+    <p th:text="|Всего заметок: ${notes.totalElements} из 200|"></p>
+    <ul class="book-list" aria-label="Личные заметки"><li th:each="note : ${notes.content}">
+        <h2><a th:href="@{/library/books/{id}/notes/{noteId}(id=${book.id},noteId=${note.id})}" th:text="|Заметка №${note.id}|"></a></h2>
+        <p class="book-meta" th:text="|${note.created} (UTC)|"></p><p class="note-text" th:text="${note.preview()}"></p>
+        <th:block th:replace="~{notes/shared :: position(${book},${note})}"></th:block>
+    </li></ul>
+    <nav th:if="${!notes.empty}" class="pagination" aria-label="Страницы заметок">
+        <a th:if="${notes.hasPrevious()}" th:href="@{/library/books/{id}/notes(id=${book.id},page=${notes.number - 1},size=${notes.size})}" rel="prev">Предыдущая</a>
+        <span th:text="|Страница ${notes.number + 1} из ${notes.totalPages}|"></span>
+        <a th:if="${notes.hasNext()}" th:href="@{/library/books/{id}/notes(id=${book.id},page=${notes.number + 1},size=${notes.size})}" rel="next">Следующая</a>
+    </nav>
+</main></body></html>

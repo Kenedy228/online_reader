@@ -31,3 +31,8 @@
 .library input[type="file"] { display: block; max-width: 100%; min-height: 2.75rem; padding: .5rem 0; font: inherit; }
 .library button:disabled { background: #555; border-color: #555; cursor: wait; }
 .library #upload-status { margin-top: 1rem; }
+
+.library textarea { display: block; width: 100%; min-height: 12rem; padding: .75rem; border: 1px solid #666; border-radius: .25rem; font: inherit; resize: vertical; }
+.library textarea:focus-visible { outline: 3px solid #174c80; outline-offset: 4px; }
+.library textarea[aria-invalid="true"] { border: 2px solid #9d1c1c; }
+.library .note-text { white-space: pre-wrap; overflow-wrap: anywhere; margin: 1rem 0; }

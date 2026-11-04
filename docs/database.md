@@ -84,3 +84,7 @@ V3→V4 сохраняет legacy данные и проверяет role CHECK/
 
 V7: reading_progress с composite owner FK к books, CAS revision и ON DELETE CASCADE.
 Upgrade/deletion/restart и rollback —[progress.md](progress.md). Миграции V1–V6 не менялись.
+
+V8: book_notes, composite owner FK к books, @Version, immutable locator, DB Unicode
+length≤2000, ON DELETE CASCADE и стабильный notes index. V7→V8 сохраняет книги
+и progress; rollback/owner/quota/delete —[notes.md](notes.md).

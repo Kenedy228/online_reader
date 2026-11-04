@@ -72,7 +72,7 @@ Thymeleaf form actions; их не выносить в URL/логи. Два бю�
 
 Текущие mutations — регистрация, login/logout, upload/metadata/delete книги и
 progress PUT. Все требуют native CSRF и server-side authority/owner независимо
-от client validation; тот же контракт обязателен для будущих заметок #26.
+от client validation; тот же контракт применяется к native notes POST #26.
 Не добавляйте CORS/CSRF exclusions или trusted forwarded headers без задачи.
 
 ## HTTP ответы
@@ -160,3 +160,7 @@ Progress API GET/PUT использует session/native CSRF и фиксиро�
 не меняя UI-контракт остальных маршрутов. JSON receiver после security ≤2КиБ/5с,
 FormContentFilter выключен и runtime guarded. Политика —[progress.md](progress.md),
 канонический HTTP-контракт —[openapi.yaml](openapi.yaml).
+
+Заметки #26 —HTML формы под /library/books/{bookId}/notes с native CSRF, escaped
+plain text, DTO allowlists и закрытым route/method allowlist. JSON API progress
+и его bounded receiver не меняются. Политика —[notes.md](notes.md).
