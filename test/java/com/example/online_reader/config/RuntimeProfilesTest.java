@@ -39,8 +39,8 @@ class RuntimeProfilesTest {
     }
 
     @ParameterizedTest
-    @org.junit.jupiter.params.provider.CsvSource({"spring.servlet.multipart.enabled,true", "spring.servlet.multipart.max-file-size,5MB", "spring.servlet.multipart.max-request-size,12MB"})
-    void cannotBypassBoundedMultipartReceiver(String key,String value) {
+    @org.junit.jupiter.params.provider.CsvSource({"spring.mvc.formcontent.filter.enabled,true", "spring.servlet.multipart.enabled,true", "spring.servlet.multipart.max-file-size,5MB", "spring.servlet.multipart.max-request-size,12MB"})
+    void cannotBypassBoundedReceivers(String key,String value) {
         var settings=new HashMap<>(database());settings.put(key,value);
         assertThatThrownBy(()->prepare(settings,"--spring.profiles.active=local")).hasMessageContaining(key);
     }

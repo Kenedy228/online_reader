@@ -2,6 +2,8 @@
 <html lang="ru" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="csrf-token" th:content="${_csrf.token}">
+    <script defer th:src="@{/js/readingProgress.bundle.js}"></script>
     <title th:text="|${book.title} — Чтение — ДостоRead|"></title>
     <link rel="stylesheet" th:href="@{/styles/styles.css}">
     <link rel="stylesheet" th:href="@{/styles/header.css}">
@@ -21,7 +23,7 @@
             <li th:each="item : ${page.toc}"><a th:href="${page.link(item.chapter,0,item.anchor)}" th:text="${item.label}"></a></li>
         </ol></nav>
     </details>
-    <form method="get" th:action="@{/library/books/{id}/read(id=${book.id})}" class="reader-settings">
+    <form method="get" th:action="@{/library/books/{id}/read(id=${book.id})}" class="reader-settings" id="reader-settings">
         <input type="hidden" name="chapter" th:value="${page.chapter}"><input type="hidden" name="offset" th:value="${page.offset}">
         <input type="hidden" name="fingerprint" th:value="${page.fingerprint}"><input type="hidden" name="version" value="1">
         <label for="reader-font">Размер текста</label>
@@ -35,9 +37,19 @@
     <h2 th:text="${page.label}"></h2>
     <p th:if="${page.total > 0}" class="book-meta" th:text="|Фрагмент: ${page.offset + 1}–${page.next} из ${page.total} символов|"></p>
     <p th:if="${page.total == 0}">В этой главе нет текста для отображения. Выберите другую главу в оглавлении.</p>
+    <p id="progress-status" role="status" aria-live="polite"><span id="progress-message">Автосохранение ещё не включено.</span>
+        <a th:href="@{/library}">Библиотека</a> <a href="#reader-settings" id="progress-font">Настроить шрифт</a>
+        <a href="#progress-actions" id="progress-manage" hidden>Управление сохранением</a></p>
+    <div id="progress-actions" class="actions" tabindex="-1" hidden>
+        <button type="button" id="progress-save">Сохранить позицию</button>
+        <a id="progress-load" th:href="@{/library/books/{id}/read(id=${book.id})}" hidden>Загрузить сохранённую позицию</a>
+        <button type="button" id="progress-replace" hidden>Сохранить эту позицию вместо другой</button>
+        <button type="button" id="progress-leave" hidden>Уйти без сохранения</button>
+    </div>
+    <noscript><p>Автосохранение требует JavaScript. Включите его или сохраните адрес текущего фрагмента.</p></noscript>
     <!-- Only BookReader's reconstructed, escaped markup is trusted here; never original XHTML. -->
     <article id="book-text" class="reader-text" th:classappend="${'font-' + page.font.name()}" tabindex="-1" aria-label="Текст книги"
-             th:attr="data-chapter=${page.chapter},data-offset=${page.offset},data-fingerprint=${page.fingerprint},data-version=1" th:utext="${page.html}"></article>
+             th:attr="data-chapter=${page.chapter},data-offset=${page.offset},data-fingerprint=${page.fingerprint},data-version=1,data-end=${page.next},data-revision=${progress.revision},data-proof=${proof},data-api=@{/api/v1/books/{id}/reading-progress(id=${book.id})},data-saved-chapter=${progress.position != null ? progress.position.chapter : ''},data-saved-offset=${progress.position != null ? progress.position.offset : ''},data-saved-fingerprint=${progress.position != null ? progress.position.fingerprint : ''},data-saved-version=${progress.position != null ? progress.position.version : ''}" th:utext="${page.html}"></article>
     <nav class="pagination" aria-label="Фрагменты книги">
         <a th:if="${page.previous()}" th:href="${page.link(page.chapter,page.previousOffset(),null)}" rel="prev">Предыдущий фрагмент</a>
         <a th:if="${page.following()}" th:href="${page.link(page.chapter,page.next,null)}" rel="next">Следующий фрагмент</a>
@@ -47,5 +59,5 @@
         <a th:if="${page.index > 0}" th:href="${page.link(page.chapters[page.index - 1].key,0,null)}">Предыдущая глава</a>
         <a th:if="${page.index + 1 < page.chapters.size()}" th:href="${page.link(page.chapters[page.index + 1].key,0,null)}">Следующая глава</a>
     </nav>
-    <p class="reader-note">Позиция находится в адресе страницы. Сохранение прогресса между сеансами пока недоступно.</p>
+    <p class="reader-note">Позиция сохраняется в аккаунте после подтверждения сервера. При ошибке используйте управление сохранением.</p>
 </main></body></html>

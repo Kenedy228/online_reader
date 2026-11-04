@@ -28,7 +28,8 @@ public class BookService {
     }
     private final BookRepository books;
     private final CurrentAccount account;
-    public BookService(BookRepository books, CurrentAccount account) { this.books = books; this.account = account; }
+    private final com.example.online_reader.book.progress.ProgressRepository progress;
+    public BookService(BookRepository books, CurrentAccount account, com.example.online_reader.book.progress.ProgressRepository progress) { this.books = books; this.account = account; this.progress=progress; }
     public Page<BookView> list(int page, int size) {
         Integer owner = account.requireId();
         if (page < 0 || page > 10000 || size < 1 || size > 50) throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
@@ -54,6 +55,7 @@ public class BookService {
         if (book.getState() == Book.State.DELETING) return;
         if (book.getVersion() != version) throw conflict();
         // Keep the source reference and quota reservation until physical cleanup (#22).
+        progress.deleteOwned(id,account.requireId());
         book.markDeleting();
     }
     private Book ownedForWrite(Long id) {

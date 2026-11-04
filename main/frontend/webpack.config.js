@@ -7,6 +7,7 @@ module.exports = (_environment, argv = {}) => {
     }
     const entry = {
         bookUpload: './src/bookUpload.ts',
+        readingProgress: './src/readingProgress.ts',
         passwordVisibilityChangerForLogin: './src/passwordVisibilityChanger/login/login.ts',
         passwordVisibilityChangerForRegistration: './src/passwordVisibilityChanger/registration/registration.ts',
     };

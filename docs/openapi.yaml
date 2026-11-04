@@ -1,0 +1,136 @@
+openapi: 3.1.0
+info:
+  title: ДостоRead — reading progress
+  version: 1.0.0
+  description: >-
+    Canonical internal API contract for issue 25. Same-origin session and native CSRF;
+    other application routes remain server-rendered HTML. No public owner_id.
+paths:
+  /api/v1/books/{id}/reading-progress:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema: {type: integer, format: int64, minimum: 1}
+    get:
+      operationId: getReadingProgress
+      summary: Read current owner's READY book progress
+      security: [{session: []}]
+      responses:
+        '200':
+          description: Current revision; revision 0 and null position if no save exists. No-store.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Snapshot'}
+        '400': {$ref: '#/components/responses/Error'}
+        '401': {$ref: '#/components/responses/Error'}
+        '403': {$ref: '#/components/responses/Error'}
+        '404': {$ref: '#/components/responses/Error'}
+        '406': {$ref: '#/components/responses/Error'}
+        '500': {$ref: '#/components/responses/Error'}
+        '503': {$ref: '#/components/responses/Error'}
+    put:
+      operationId: replaceReadingProgress
+      summary: Replace position conditionally on the server revision
+      description: >-
+        revision 0 creates the sole progress row; subsequent requests use the last
+        confirmed revision. A repeated successful request with an old revision gives
+        409 without another write. proof is issued by the authenticated reader HTML
+        for this account/book/source/version/chapter and bounded Unicode range;
+        it grants no access. A process restart invalidates old page proofs (409
+        stale_reader), while persisted positions survive. No client timestamp wins.
+        UTF-8 JSON only, <=2048 bytes, <=5 seconds total receive time, <=100 PUT/minute
+        per account in fixed windows. Unknown fields, duplicate keys, trailing JSON,
+        floating/string integers and excessive nesting are rejected. Other methods
+        are denied by the closed URL policy. CSRF is checked before body admission.
+      security: [{session: [], csrf: []}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/Save'}
+      responses:
+        '200':
+          description: Replaced; revision increased by one. No-store.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Snapshot'}
+        '201':
+          description: Created at the request URI; revision 1. No-store.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Snapshot'}
+        '400': {$ref: '#/components/responses/Error'}
+        '401': {$ref: '#/components/responses/Error'}
+        '403': {$ref: '#/components/responses/Error'}
+        '404': {$ref: '#/components/responses/Error'}
+        '406': {$ref: '#/components/responses/Error'}
+        '408': {$ref: '#/components/responses/Error'}
+        '409':
+          description: progress_conflict, stale_reader or stale_position; no write. Explicit refresh/replace required.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Error'}
+        '413': {$ref: '#/components/responses/Error'}
+        '415': {$ref: '#/components/responses/Error'}
+        '422': {$ref: '#/components/responses/Error'}
+        '429':
+          description: Bounded account write budget exhausted; no write.
+          headers:
+            Retry-After:
+              schema: {type: integer, minimum: 1}
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Error'}
+        '500': {$ref: '#/components/responses/Error'}
+        '503': {$ref: '#/components/responses/Error'}
+components:
+  securitySchemes:
+    session: {type: apiKey, in: cookie, name: JSESSIONID}
+    csrf: {type: apiKey, in: header, name: X-CSRF-TOKEN}
+  responses:
+    Error:
+      description: >-
+        Fixed safe code/message without input, paths or exceptions. Anonymous GET is
+        401; mutations without valid CSRF may be 403 before authentication. Foreign,
+        missing and non-READY books give identical 404 after valid input. No-store.
+      content:
+        application/json:
+          schema: {$ref: '#/components/schemas/Error'}
+  schemas:
+    Position:
+      type: object
+      additionalProperties: false
+      required: [chapter, offset, fingerprint, version]
+      properties:
+        chapter: {type: string, pattern: '^(text|s[0-9]{1,4})$'}
+        offset: {type: integer, minimum: 0, maximum: 10485760, description: Unicode code point offset inside the server-signed readable range; empty chapter has offset 0.}
+        fingerprint: {type: string, pattern: '^[0-9a-f]{64}$'}
+        version: {type: integer, enum: [1]}
+    Save:
+      type: object
+      additionalProperties: false
+      required: [revision, position, proof]
+      properties:
+        revision: {type: integer, format: int32, minimum: 0, maximum: 2147483646}
+        position: {$ref: '#/components/schemas/Position'}
+        proof: {type: string, minLength: 1, maxLength: 100}
+    Snapshot:
+      type: object
+      additionalProperties: false
+      required: [revision, position]
+      properties:
+        revision: {type: integer, format: int32, minimum: 0, maximum: 2147483647}
+        position:
+          oneOf:
+            - {$ref: '#/components/schemas/Position'}
+            - {type: 'null'}
+    Error:
+      type: object
+      additionalProperties: false
+      required: [code, message]
+      properties:
+        code:
+          type: string
+          enum: [invalid_request, authentication_required, access_denied, not_found, method_not_allowed, not_acceptable, receive_timeout, request_too_large, unsupported_media_type, invalid_position, rate_limited, temporarily_unavailable, request_failed, progress_conflict, stale_position, stale_reader]
+        message: {type: string}

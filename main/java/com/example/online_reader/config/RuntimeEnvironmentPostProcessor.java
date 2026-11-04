@@ -128,6 +128,7 @@ public final class RuntimeEnvironmentPostProcessor implements EnvironmentPostPro
         check(fileSize == 10485760L, "spring.servlet.multipart.max-file-size");
         check(requestSize == 11534336L, "spring.servlet.multipart.max-request-size");
         expected(environment, "spring.servlet.multipart.enabled", "false");
+        expected(environment, "spring.mvc.formcontent.filter.enabled", "false");
         validate(environment, "online-reader.storage.root", value -> {
             Path root = Path.of(value);
             return !"production".equals(profiles[0]) || root.isAbsolute();

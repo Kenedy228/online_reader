@@ -55,6 +55,13 @@ public class FileBookTransactions {
         if(book.getState()!=Book.State.READY)throw new ResponseStatusException(HttpStatus.NOT_FOUND);
         return new Source(book.getId(),book.getStorageKey(),book.getFormat(),book.getOriginalSize(),book.getSourceSha256());
     }
+    /** Lock before loading the Book snapshot: later progress writes serialize with logical deletion. */
+    public Source lockReady(Long id) {
+        limits();
+        var book=books.lockOwned(id,account.requireId()).orElseThrow(()->new ResponseStatusException(HttpStatus.NOT_FOUND));
+        if(book.getState()!=Book.State.READY)throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+        return new Source(book.getId(),book.getStorageKey(),book.getFormat(),book.getOriginalSize(),book.getSourceSha256());
+    }
     public int recoverInterrupted(){limits();return books.recoverInterrupted();}
     @Transactional(readOnly=true,timeout=5)
     public List<Source> abandoned() {
