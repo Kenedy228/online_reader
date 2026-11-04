@@ -24,8 +24,9 @@ cost12 с префиксом `{bcrypt}`. Аккаунт создаётся че�
 seed-пользователя нет. Email пока не подтверждается; вход выполняется по username.
 Правила, ошибки и совместимость legacy — [docs/registration.md](docs/registration.md). Политика сессии, ограничения попыток и перенос
 старых данных описаны в [docs/authentication.md](docs/authentication.md). Поддерживаемые
-форматы книг, лимиты и точные границы MVP определяются в
-[issue #4](https://github.com/Kenedy228/online_reader/issues/4).
+форматы и критерии MVP зафиксированы в [docs/mvp.md](docs/mvp.md): EPUB + TXT,
+без DRM/других форматов,10 МиБ на файл,100 книг и1 ГиБ исходников на пользователя.
+Книжные функции ещё предстоит реализовать; спецификация не означает их готовность.
 
 HTTP headers/CSRF и безопасные HTML/ProblemDetail ошибки описаны в
 [docs/http-security.md](docs/http-security.md). CSP включена без unsafe-inline;
