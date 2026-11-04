@@ -4,7 +4,7 @@
 администратор. Администратор не получает доступ к чужой личной библиотеке,
 файлам, прогрессу или заметкам. Это основа #17; полное закрытие задачи требует
 реальных owner-проверок в #19/#22/#25/#26. Библиотека из #19 реализована;
-загрузка/download файлов из #22 и owner read/resources из #23 реализованы; owner progress GET/PUT реализован; заметки ещё ожидают интеграции.
+загрузка/download файлов из #22 и owner read/resources из #23 реализованы; owner progress GET/PUT реализован; owner notes CRUD также реализован; полная матрица требует итоговой приёмки после merge #26.
 
 ## Матрица доступа
 
@@ -23,8 +23,7 @@
 проверяет live accountId/username/роль/флаги, SQL ограничен owner, Admin bypass нет.
 Подробности и реальные resource tests —[library.md](library.md). Загрузка и attachment download
 с owner/READY проверкой реализованы ([book-files.md](book-files.md)). Чтение и
-приватные изображения реализованы ([reader.md](reader.md)). Прогресс реализован в versioned API ([progress.md](progress.md)); заметки
-ещё отсутствуют, их URL закрыты fallback.
+приватные изображения реализованы ([reader.md](reader.md)). Прогресс реализован в versioned API ([progress.md](progress.md)); личные заметки реализованы в server-rendered формах ([notes.md](notes.md)).
 Production admin handlers/панели тоже пока нет;
 разрешённый админом запрос неизвестного `/admin/*` завершится 404. Test-only
 policy probes позволяют проверить filter chain, но не заменяют resource tests.
@@ -145,3 +144,7 @@ provider/RegistrationService/JPA вызовы с назначением/снят
 
 Читалка и приватные PNG/JPEG повторяют live owner/READY policy перед I/O.
 Admin не получает чужие страницы или изображения; контракт —[reader.md](reader.md).
+
+Notes CRUD проверяет одновременно bookId/noteId/ownerId до данных/эффекта; чужая
+заметка в своей книге также404, Admin override отсутствует. Notes/progress удаляются
+первым DELETING commit; источник/quota marker остаётся до cleanup.

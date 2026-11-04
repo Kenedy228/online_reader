@@ -113,3 +113,7 @@ dirty-состояния, sticky font-ссылку с точным checkpoint, k
 не меняет и не синтезирует прогресс. Для отката остановите writes и восстановите
 pre-V7 snapshot вместе со storage; не редактируйте Flyway history/старые миграции,
 не запускайте clean и не удаляйте таблицу с позициями как скрытый rollback.
+
+Личные заметки используют тот же locator/range proof, но сохраняются явно
+нативной формой. Reader note-link ждёт progress flush и передаёт актуальный cursor;
+book DELETING удаляет обе коллекции в первом commit. Контракт —[notes.md](notes.md).

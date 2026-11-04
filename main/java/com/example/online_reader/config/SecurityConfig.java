@@ -44,7 +44,7 @@ public class SecurityConfig {
             "/styles/footer.css", "/styles/header.css", "/styles/index.css", "/styles/login.css",
             "/styles/registration.css", "/styles/styles.css",
             "/styles/error.css", "/styles/library.css", "/styles/reader.css",
-            "/js/bookUpload.bundle.js", "/js/readingProgress.bundle.js",
+            "/js/bookNotes.bundle.js", "/js/bookUpload.bundle.js", "/js/readingProgress.bundle.js",
             "/js/passwordVisibilityChangerForLogin.bundle.js",
             "/js/passwordVisibilityChangerForRegistration.bundle.js"
     };
@@ -102,6 +102,9 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/library/books/{id}/edit", "/library/books/{id}/delete").authenticated()
                         .requestMatchers(HttpMethod.GET,"/api/v1/books/{id}/reading-progress").authenticated()
                         .requestMatchers(HttpMethod.PUT,"/api/v1/books/{id}/reading-progress").authenticated()
+                        .requestMatchers(HttpMethod.GET,"/library/books/{bookId}/notes","/library/books/{bookId}/notes/new","/library/books/{bookId}/notes/{noteId}","/library/books/{bookId}/notes/{noteId}/edit","/library/books/{bookId}/notes/{noteId}/delete").authenticated()
+                        .requestMatchers(HttpMethod.HEAD,"/library/books/{bookId}/notes","/library/books/{bookId}/notes/new","/library/books/{bookId}/notes/{noteId}","/library/books/{bookId}/notes/{noteId}/edit","/library/books/{bookId}/notes/{noteId}/delete").authenticated()
+                        .requestMatchers(HttpMethod.POST,"/library/books/{bookId}/notes","/library/books/{bookId}/notes/{noteId}/edit","/library/books/{bookId}/notes/{noteId}/delete").authenticated()
                         .requestMatchers("/admin/**").access((auth, context) ->
                                 new AuthorizationDecision(adminAccess.isAllowed(auth.get())))
                         .anyRequest().denyAll())

@@ -1,0 +1,11 @@
+<!doctype html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{library/shared :: head('Заметка')}"></head>
+<body><a class="skip-link" href="#main">К содержимому</a><header th:replace="~{components/header :: header}"></header>
+<main id="main" class="library" tabindex="-1">
+    <h1 th:text="|Заметка №${note.id}|"></h1><h2 th:text="${book.title}"></h2><nav th:replace="~{notes/shared :: navigation(${book})}"></nav>
+    <p class="book-meta" th:text="|${note.created} (UTC)|"></p><p class="note-text" id="saved-note" th:text="${note.text}"></p>
+    <th:block th:replace="~{notes/shared :: position(${book},${note})}"></th:block>
+    <div class="actions"><a th:href="@{/library/books/{id}/notes/{noteId}/edit(id=${book.id},noteId=${note.id})}">Изменить заметку</a>
+        <a th:href="@{/library/books/{id}/notes/{noteId}/delete(id=${book.id},noteId=${note.id})}">Удалить заметку</a></div>
+</main></body></html>

@@ -1,0 +1,15 @@
+<!doctype html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{library/shared :: head('Новая заметка')}"></head>
+<body><a class="skip-link" href="#main">К содержимому</a><header th:replace="~{components/header :: header}"></header>
+<main id="main" class="library" tabindex="-1">
+    <h1>Новая заметка</h1><h2 th:text="${book.title}"></h2><nav th:replace="~{notes/shared :: navigation(${book})}"></nav>
+    <p>Заметка привязана к выбранному месту в книге. Размер шрифта не меняет привязку.</p>
+    <form method="post" th:action="@{/library/books/{id}/notes(id=${book.id})}" th:object="${note}" th:attr="data-unsaved=${#fields.hasAnyErrors()}">
+        <div th:replace="~{notes/shared :: errors}"></div>
+        <input type="hidden" name="chapter" th:value="${note.chapter}"><input type="hidden" name="offset" th:value="${note.offset}">
+        <input type="hidden" name="fingerprint" th:value="${note.fingerprint}"><input type="hidden" name="version" th:value="${note.version}"><input type="hidden" name="proof" th:value="${note.proof}">
+        <th:block th:replace="~{notes/shared :: editor(${note.text})}"></th:block>
+        <div class="actions"><button type="submit">Сохранить заметку</button><a th:href="@{/library/books/{id}/notes(id=${book.id})}">Отмена</a></div>
+    </form>
+</main></body></html>

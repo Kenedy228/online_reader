@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org"><body>
+<nav th:fragment="navigation(book)" class="actions" aria-label="Книга и заметки">
+    <a th:href="@{/library/books/{id}(id=${book.id})}">Карточка книги</a>
+    <a th:href="@{/library/books/{id}/read(id=${book.id})}">Читать книгу</a>
+    <a th:href="@{/library/books/{id}/notes(id=${book.id})}">Заметки книги</a>
+</nav>
+<div th:fragment="errors" th:if="${#fields.hasAnyErrors()}" class="errors" role="alert" tabindex="-1">
+    <p>Изменения не сохранены.</p><ul><li th:each="error : ${#fields.globalErrors()}" th:text="${error}"></li></ul>
+    <p th:if="${#fields.hasErrors('version')}">Откройте форму заново и проверьте актуальную заметку.</p>
+</div>
+<th:block th:fragment="editor(value)">
+    <label for="note-text">Текст заметки (обязательно)</label>
+    <p id="note-hint">До 2000 Unicode-символов. Обычный текст без оформления.</p>
+    <textarea id="note-text" name="text" rows="8" maxlength="4000" required aria-describedby="note-hint note-count note-error" th:attr="aria-invalid=${#fields.hasErrors('text')}" th:text="${value}"></textarea>
+    <p id="note-count"></p><p id="note-error" class="field-error"><span th:errors="*{text}"></span></p>
+    <script defer th:src="@{/js/bookNotes.bundle.js}"></script>
+</th:block>
+<th:block th:fragment="position(book,note)">
+    <p th:if="${note.current}"><a th:href="@{/library/books/{id}/read(id=${book.id},chapter=${note.position.chapter},offset=${note.position.offset},fingerprint=${note.position.fingerprint},version=${note.position.version})}">Открыть место в книге</a></p>
+    <p th:unless="${note.current}">Позиция устарела. Текст заметки доступен; привязка не переносится на другое содержимое.</p>
+</th:block>
+</body></html>
