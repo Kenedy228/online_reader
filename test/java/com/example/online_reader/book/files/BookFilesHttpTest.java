@@ -131,23 +131,19 @@ class BookFilesHttpTest {
         assertThat(books.findById(id)).isEmpty();
     }
     @Test void admissionIsBoundedBeforeBodyParsingAndSlowBodyTimesOut()throws Exception {
+        var admitted=new java.util.concurrent.CountDownLatch(2);
+        org.mockito.Mockito.doAnswer(invocation->{var job=invocation.callRealMethod();admitted.countDown();return job;}).when(storage).admit();
         long started=System.nanoTime();
-        try(var first=slowBody();var second=slowBody()) {
-            int status=0;
-            for(int i=0;i<30;i++) {
-                status=upload(new byte[0],"empty.txt",token).statusCode();
-                if(status==503)break;Thread.sleep(50);
-            }
-            assertThat(status).isEqualTo(503);
+        try(var first=slowBody();var second=slowBody();var trickle=java.util.concurrent.Executors.newSingleThreadScheduledExecutor()) {
+            // Keep both streams alive from the start; only probe overload after the real storage
+            // admission has accepted both. No fixed sleep or guessed network scheduling order.
+            trickle.scheduleAtFixedRate(()->{try{first.write();}catch(IOException closed){ }try{second.write();}catch(IOException closed){ }},0,1,java.util.concurrent.TimeUnit.SECONDS);
+            assertThat(admitted.await(5,java.util.concurrent.TimeUnit.SECONDS))
+                    .withFailMessage("Held uploads not admitted: first=%s, second=%s",earlyStatus(first),earlyStatus(second)).isTrue();
+            assertThat(upload(new byte[0],"empty.txt",token).statusCode()).isEqualTo(503);
             second.close();
-            // Keep each gap below the existing socket idle timeout: test the absolute deadline,
-            // not the container's independent (earlier) idle-connection shutdown.
-            try(var trickle=java.util.concurrent.Executors.newSingleThreadScheduledExecutor()) {
-                trickle.scheduleAtFixedRate(()->{try{first.getOutputStream().write("1\r\nx\r\n".getBytes(StandardCharsets.US_ASCII));first.getOutputStream().flush();}catch(IOException closed){ }},1,2,java.util.concurrent.TimeUnit.SECONDS);
-            var input=new BufferedReader(new InputStreamReader(first.getInputStream(),StandardCharsets.US_ASCII));
-            assertThat(input.readLine()).contains("408");
+            assertThat(first.status.get(38,java.util.concurrent.TimeUnit.SECONDS)).isEqualTo(408);
             assertThat(Duration.ofNanos(System.nanoTime()-started)).isBetween(Duration.ofSeconds(28),Duration.ofSeconds(38));
-            }
         }
         String next=null;
         for(int i=0;i<30;i++) {
@@ -157,13 +153,35 @@ class BookFilesHttpTest {
         }
         assertThat(next).isNotNull();
     }
-    Socket slowBody()throws IOException {
-        var socket=new Socket("127.0.0.1",port);socket.setSoTimeout(40000);
-        String session=cookies.getCookieStore().getCookies().stream().filter(c->c.getName().equals("JSESSIONID")).findFirst().orElseThrow().getValue();
-        String headers="POST /library/upload HTTP/1.1\r\nHost: 127.0.0.1:"+port+"\r\nCookie: JSESSIONID="+session+"\r\nX-CSRF-TOKEN: "+token+"\r\nContent-Type: multipart/form-data; boundary=boundary\r\nTransfer-Encoding: chunked\r\nConnection: close\r\n\r\n3\r\nabc\r\n";
-        socket.getOutputStream().write(headers.getBytes(StandardCharsets.US_ASCII));socket.getOutputStream().flush();return socket;
+    String earlyStatus(SlowUpload upload) {
+        if(!upload.status.isDone())return "pending";
+        try{return Integer.toString(upload.status.get());}catch(Exception error){return error.getClass().getSimpleName();}
     }
-
+    SlowUpload slowBody()throws IOException {return new SlowUpload();}
+    final class SlowUpload implements AutoCloseable {
+        private final PipedInputStream input=new PipedInputStream(1024);
+        private final PipedOutputStream output=new PipedOutputStream(input);
+        final java.util.concurrent.CompletableFuture<HttpResponse<InputStream>> response;
+        final java.util.concurrent.CompletableFuture<Integer> status=new java.util.concurrent.CompletableFuture<>();
+        SlowUpload()throws IOException {
+            // Use the same authenticated client/cookie policy as successful uploads. Let the JDK
+            // frame chunked transport; the open stream deliberately withholds multipart completion.
+            response=client.sendAsync(HttpRequest.newBuilder(URI.create(base()+"/library/upload"))
+                    .timeout(Duration.ofSeconds(45)).header("Content-Type","multipart/form-data; boundary=boundary")
+                    .header("X-CSRF-TOKEN",token).POST(HttpRequest.BodyPublishers.ofInputStream(()->input)).build(),info->{
+                        // Observe the rejection headers without waiting for the intentionally
+                        // unfinished request/response body to drain after the server closes it.
+                        status.complete(info.statusCode());return HttpResponse.BodySubscribers.ofInputStream();
+                    });
+            response.whenComplete((reply,error)->{if(error!=null)status.completeExceptionally(error);});
+            output.write("abc".getBytes(StandardCharsets.US_ASCII));output.flush();
+        }
+        void write()throws IOException {output.write('x');output.flush();}
+        @Override public void close(){
+            response.whenComplete((completed,error)->{if(completed!=null)try{completed.body().close();}catch(IOException ignored){ }});
+            response.cancel(true);try{output.close();}catch(IOException ignored){ }try{input.close();}catch(IOException ignored){ }
+        }
+    }
     @Test void processingDeadlineReturnsControlledFailureAndWorkerCapacityRecovers()throws Exception {
         org.mockito.Mockito.doAnswer(invocation->{
             try{Thread.sleep(30000);}catch(InterruptedException cancelled){Thread.currentThread().interrupt();}
