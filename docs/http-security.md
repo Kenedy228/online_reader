@@ -144,3 +144,12 @@ flows/toggle/resources работают без app CSP violations, внедрё�
 same-origin browser route, не через новый production asset или unsafe-inline.
 Это не полный WCAG/ASVS аудит. Preview и данные синтетические, сервер остановлен
 после проверки; deployment не выполнялся.
+
+## Реальные исходники книг
+
+`/library/books/{id}/download` разрешён только с сессией; сервис проверяет live
+account/owner/READY до storage. TXT/EPUB получают проверенный MIME и attachment
+с безопасным server-generated filename, nosniff/no-store/CSP. Original path/name
+не участвуют в маршруте или disposition. Публичной выдачи storage/inline HTML/XML/SVG
+нет. Real HTTP tests проверяют байты, headers и foreign User/Admin404, ошибки CSRF/size.
+Подробности —[book-files.md](book-files.md); reader content sanitization остаётся #23.

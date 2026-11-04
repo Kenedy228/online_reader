@@ -6,6 +6,7 @@
 <header th:replace="~{components/header :: header}"></header>
 <main id="main" class="library" tabindex="-1">
     <h1>Моя библиотека</h1>
+    <a th:href="@{/library/upload}">Добавить книгу</a>
     <p th:if="${books.empty}" class="empty">В библиотеке пока нет книг.</p>
     <th:block th:unless="${books.empty}">
         <p th:text="|Всего книг: ${books.totalElements}|"></p>

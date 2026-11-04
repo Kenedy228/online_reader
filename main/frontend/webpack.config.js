@@ -6,6 +6,7 @@ module.exports = (_environment, argv = {}) => {
         throw new Error('Use production or development mode');
     }
     const entry = {
+        bookUpload: './src/bookUpload.ts',
         passwordVisibilityChangerForLogin: './src/passwordVisibilityChanger/login/login.ts',
         passwordVisibilityChangerForRegistration: './src/passwordVisibilityChanger/registration/registration.ts',
     };

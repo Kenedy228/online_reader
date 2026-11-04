@@ -7,6 +7,9 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 public interface UserRepository extends JpaRepository<User, Integer> {
+    @org.springframework.data.jpa.repository.Lock(jakarta.persistence.LockModeType.PESSIMISTIC_WRITE)
+    @Query("select u from User u where u.id = :id")
+    java.util.Optional<User> lockById(Integer id);
     User findUserByUsername(String name);
     // DB uniqueness is the authority under concurrency; a conflict never updates another account.
     // Native ON CONFLICT avoids exception logs containing duplicate email/username values.
