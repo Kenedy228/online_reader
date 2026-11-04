@@ -12,6 +12,7 @@ RUN --mount=type=cache,target=/root/.m2 ./mvnw -B -ntp clean verify
 FROM eclipse-temurin:21-jre-noble@sha256:161310cd5bd41fd549d19cf9f90b614897cb4a1532555c613b43b7e0628fe5d6
 RUN groupadd --gid 10001 reader \
     && useradd --uid 10001 --gid 10001 --no-create-home --shell /usr/sbin/nologin reader
+RUN mkdir -p /app/storage && chown 10001:10001 /app/storage && chmod 700 /app/storage
 WORKDIR /app
 COPY --from=build --chown=10001:10001 /workspace/target/online-reader-0.0.1-SNAPSHOT.jar app.jar
 USER 10001:10001

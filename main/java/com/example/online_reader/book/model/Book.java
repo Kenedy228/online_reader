@@ -68,4 +68,5 @@ public class Book {
     public long getOriginalSize() { return originalSize; }
     public Instant getCreatedAt() { return createdAt; }
     public long getVersion() { return version; }
+    public UUID getStorageKey() { return storageKey; }
 }

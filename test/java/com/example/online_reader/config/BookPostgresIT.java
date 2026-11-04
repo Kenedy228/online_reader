@@ -37,6 +37,7 @@ class BookPostgresIT {
                 "spring.datasource.url", DATABASE.getJdbcUrl(),
                 "spring.datasource.username", DATABASE.getUsername(),
                 "spring.datasource.password", DATABASE.getPassword(),
+                "online-reader.storage.root", java.nio.file.Path.of(System.getProperty("java.io.tmpdir"), "dostoread-pg-" + UUID.randomUUID()).toString(),
                 "server.address", "127.0.0.1",
                 "logging.level.root", "WARN", "spring.main.banner-mode", "off");
         var application = new SpringApplication(OnlineReaderApplication.class);
@@ -142,4 +143,45 @@ class BookPostgresIT {
         assertThat(jdbc.queryForObject("select state from books where owner_id=? and title='Reserved'",String.class,owner.getId())).isEqualTo("PROCESSING");
         assertThat(jdbc.queryForObject("select count(*) from pg_indexes where tablename='books' and indexname='books_owner_created_idx'",Integer.class)).isEqualTo(1);
     }
+    @Test void reservationWaitForOwnerLockIsBoundedAndDoesNotAllocate()throws Exception {
+        authenticate();
+        try(var connection=java.sql.DriverManager.getConnection(DATABASE.getJdbcUrl(),DATABASE.getUsername(),DATABASE.getPassword())) {
+            connection.setAutoCommit(false);
+            try(var statement=connection.prepareStatement("select id from users where id=? for update")) {
+                statement.setInt(1,owner.getId());statement.executeQuery().close();
+                long started=System.nanoTime();
+                assertThatThrownBy(()->context.getBean(com.example.online_reader.book.files.FileBookTransactions.class)
+                        .reserve("Blocked",Book.Format.TXT,1,"b".repeat(64),UUID.randomUUID())).isInstanceOf(org.springframework.dao.DataAccessException.class);
+                assertThat(java.time.Duration.ofNanos(System.nanoTime()-started)).isLessThan(java.time.Duration.ofSeconds(4));
+                assertThat(context.getBean(BookRepository.class).countByOwner_Id(owner.getId())).isEqualTo(1);
+            }finally{connection.rollback();}
+        }
+    }
+    @Test void secondInstanceCannotRecoverAgainstSameDatabaseEvenWithCopiedRootIdentity()throws Exception {
+        var original=context.getBean(com.example.online_reader.book.files.PrivateBookStorage.class);
+        var path=java.nio.file.Files.createTempDirectory("book-second-root-");
+        java.nio.file.Files.writeString(path.resolve(".identity"),original.identity().toString());
+        try(var second=new com.example.online_reader.book.files.PrivateBookStorage(path.toString())) {
+            assertThatThrownBy(()->new com.example.online_reader.book.files.BookStorageLease(context.getBean(javax.sql.DataSource.class),second))
+                    .isInstanceOf(java.sql.SQLException.class).hasMessageContaining("already in use");
+            context.getBean(com.example.online_reader.book.files.BookStorageLease.class).requireValid();
+        }
+    }
+    @Test void concurrentReservationsCannotExceedOneRemainingSlot()throws Exception {
+        var repository=context.getBean(BookRepository.class);
+        for(int i=0;i<98;i++)repository.saveAndFlush(processing(owner,"Reserved "+i));
+        var start=new CountDownLatch(1);
+        try(var executor=Executors.newFixedThreadPool(2)) {
+            var a=executor.submit(()->reserveAfter(start,"b"));var b=executor.submit(()->reserveAfter(start,"c"));start.countDown();
+            assertThat(a.get(15,TimeUnit.SECONDS)).isNotEqualTo(b.get(15,TimeUnit.SECONDS));
+        }
+        assertThat(repository.countByOwner_Id(owner.getId())).isEqualTo(100);
+    }
+    boolean reserveAfter(CountDownLatch start,String hash)throws Exception {
+        start.await();authenticate();
+        try{context.getBean(com.example.online_reader.book.files.FileBookTransactions.class).reserve("Last slot",Book.Format.TXT,1,hash.repeat(64),UUID.randomUUID());return true;}
+        catch(com.example.online_reader.book.files.BookFileException expected){assertThat(expected.status()).isEqualTo(409);return false;}
+        finally{SecurityContextHolder.clearContext();}
+    }
+
 }

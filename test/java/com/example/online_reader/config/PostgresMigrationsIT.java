@@ -35,7 +35,7 @@ class PostgresMigrationsIT {
     void migratesEmptyDatabaseAndValidatesJpaMappings() {
         Flyway flyway = migrate("schema_" + UUID.randomUUID().toString().replace("-", ""));
         var settings = new Configuration()
-                .addAnnotatedClass(User.class).addAnnotatedClass(Admin.class).addAnnotatedClass(Action.class).addAnnotatedClass(Book.class)
+                .addAnnotatedClass(User.class).addAnnotatedClass(Admin.class).addAnnotatedClass(Action.class).addAnnotatedClass(Book.class).addAnnotatedClass(com.example.online_reader.book.model.BookStorageBinding.class)
                 .setProperty("jakarta.persistence.jdbc.url", DATABASE.getJdbcUrl())
                 .setProperty("jakarta.persistence.jdbc.user", DATABASE.getUsername())
                 .setProperty("jakarta.persistence.jdbc.password", DATABASE.getPassword())
@@ -239,7 +239,7 @@ class PostgresMigrationsIT {
         flyway(schema, "4").migrate();
         try (var connection = connection(schema)) {
             insertLegacy(connection, "users", "before-library", HASH);
-            assertThat(flyway(schema, null).migrate().migrationsExecuted).isEqualTo(1);
+            assertThat(flyway(schema, "5").migrate().migrationsExecuted).isEqualTo(1);
             try (var statement = connection.createStatement();
                  var rows = statement.executeQuery("select username,password,enabled,account_non_locked,role from users")) {
                 assertThat(rows.next()).isTrue();
@@ -254,6 +254,25 @@ class PostgresMigrationsIT {
                  var rows = statement.executeQuery("select count(*) from books")) {
                 rows.next(); assertThat(rows.getInt(1)).isZero();
             }
+        }
+    }
+
+    @Test
+    void v6AddsUnboundStorageWithoutChangingExistingBooks() throws SQLException {
+        String schema = "binding_" + UUID.randomUUID().toString().replace("-", "");
+        flyway(schema,"5").migrate();
+        var key=UUID.randomUUID();
+        try(var connection=connection(schema)) {
+            insertLegacy(connection,"users","before-binding",HASH);
+            try(var insert=connection.prepareStatement("insert into books(owner_id,title,author,format,state,original_size,source_sha256,storage_key) values (1,'Preserved','Author','TXT','READY',7,?,?)")) {
+                insert.setString(1,"e".repeat(64));insert.setObject(2,key);insert.executeUpdate();
+            }
+            assertThat(flyway(schema,"6").migrate().migrationsExecuted).isEqualTo(1);
+            try(var statement=connection.createStatement();var rows=statement.executeQuery("select title,author,state,original_size,storage_key,version from books")) {
+                assertThat(rows.next()).isTrue();assertThat(rows.getString(1)).isEqualTo("Preserved");assertThat(rows.getString(2)).isEqualTo("Author");
+                assertThat(rows.getString(3)).isEqualTo("READY");assertThat(rows.getLong(4)).isEqualTo(7);assertThat(rows.getObject(5,UUID.class)).isEqualTo(key);assertThat(rows.getLong(6)).isZero();
+            }
+            try(var statement=connection.createStatement();var rows=statement.executeQuery("select count(*) from book_storage")){rows.next();assertThat(rows.getInt(1)).isZero();}
         }
     }
 
@@ -285,7 +304,7 @@ class PostgresMigrationsIT {
         Flyway flyway = Flyway.configure().dataSource(DATABASE.getJdbcUrl(),
                         DATABASE.getUsername(), DATABASE.getPassword())
                 .defaultSchema(schema).schemas(schema).cleanDisabled(true).load();
-        assertThat(flyway.migrate().migrationsExecuted).isEqualTo(5);
+        assertThat(flyway.migrate().migrationsExecuted).isEqualTo(6);
         flyway.validate();
         return flyway;
     }

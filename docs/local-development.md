@@ -75,8 +75,8 @@ Docker socket в build stage не передаётся. Builder использу
 нужный Wrapper для проверки ZIP-дистрибутива по закреплённой SHA-256.
 Runtime — отдельный JRE21 image без Maven/Node/исходников, UID/GID10001;
 Java работает как PID1 и получает SIGTERM напрямую. Root filesystem read-only,
-`/tmp` — ограниченный tmpfs. Файловое хранилище книг ещё не реализовано (#22),
-volume для книг пока не создаётся.
+`/tmp` — ограниченный tmpfs. Книги сохраняются в отдельной приватной
+`books-data:/app/storage`; staging загрузок тоже находится там и имеет свой бюджет.
 
 Compose ждёт TCP healthcheck PostgreSQL и readyz Mailpit перед стартом приложения. Flyway поднимает
 пустую схему, Hibernate выполняет validate. HTTP healthcheck приложения проверяет
@@ -116,3 +116,13 @@ allowlist, сохраняя исключение секретов.
 По умолчанию порты служебных компонентов ограничены loopback. Не меняйте это
 окружение в конфигурацию внешнего production-сервера. Makefile предоставляет
 setup/up/run/down/logs и проверки (полная семантика в README); читалка/E2E — #27.
+
+## Хранилище книг
+
+App использует `books-data:/app/storage` с UID/GID10001 и приватными правами0700.
+Compose down сохраняет books-data и postgres-data. Не добавляйте `-v` к остановке.
+Host JAR использует свой ONLINE_READER_STORAGE_ROOT: нельзя одновременно подключать
+host/Compose к одной БД или заменять существующей БД root на пустой. Сохраняйте
+БД, sources и `.identity` вместе; binding/lease не обходить. Полный контракт —
+[book-files.md](book-files.md). Native multipart выключен ради ограниченного receiver;
+размеры10MB/11MB закреплены MVP, не являются произвольными runtime overrides.

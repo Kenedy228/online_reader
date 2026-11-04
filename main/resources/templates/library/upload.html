@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{library/shared :: head('Добавить книгу')}"></head>
+<body>
+<a class="skip-link" href="#main">К содержимому</a>
+<header th:replace="~{components/header :: header}"></header>
+<main id="main" class="library" tabindex="-1">
+    <a th:href="@{/library}">Моя библиотека</a>
+    <h1>Добавить книгу</h1>
+    <p>EPUB или TXT в UTF-8, до 10 МиБ. Книги с DRM не поддерживаются.</p>
+    <p>В библиотеке можно хранить до 100 книг и 1 ГиБ исходных файлов.</p>
+    <noscript><p>Для загрузки книги включите JavaScript в браузере.</p></noscript>
+    <div id="upload-error" role="alert" class="errors" th:hidden="${uploadError == null}" tabindex="-1">
+        <p id="upload-message" th:text="${uploadError}"></p>
+        <a id="upload-duplicate" th:if="${duplicateId != null}" th:href="@{/library/books/{id}(id=${duplicateId})}">Открыть имеющуюся книгу</a>
+    </div>
+    <p id="upload-status" role="status"></p>
+    <form id="book-upload" method="post" enctype="multipart/form-data" th:action="@{/library/upload}">
+        <label for="file">Файл книги (обязательно)</label>
+        <p id="file-hint">Выберите один файл .epub или .txt. После загрузки можно изменить название и автора.</p>
+        <input id="file" name="file" type="file" accept=".epub,.txt" required aria-describedby="file-hint upload-message">
+        <div class="actions"><button type="submit" disabled>Добавить книгу</button><a th:href="@{/library}">Отмена</a></div>
+    </form>
+</main>
+<script defer th:src="@{/js/bookUpload.bundle.js}"></script>
+</body></html>

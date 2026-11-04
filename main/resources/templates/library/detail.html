@@ -9,6 +9,7 @@
     <h1 th:text="${book.title}"></h1>
     <dl th:replace="~{library/shared :: metadata(${book})}"></dl>
     <div class="actions">
+        <a th:if="${book.ready()}" th:href="@{/library/books/{id}/download(id=${book.id})}">Скачать исходник</a>
         <a th:if="${book.ready()}" th:href="@{/library/books/{id}/edit(id=${book.id})}">Изменить название и автора</a>
         <a th:href="@{/library/books/{id}/delete(id=${book.id})}">Удалить книгу</a>
     </div>

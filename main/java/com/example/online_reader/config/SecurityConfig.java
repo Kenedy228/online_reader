@@ -2,6 +2,7 @@ package com.example.online_reader.config;
 
 import com.example.online_reader.security.LoginAttemptLimiter;
 import com.example.online_reader.security.AdminAccessPolicy;
+import com.example.online_reader.book.files.*;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.authorization.AuthorizationDecision;
 import com.example.online_reader.security.LoginRequestFilter;
@@ -42,6 +43,7 @@ public class SecurityConfig {
             "/styles/footer.css", "/styles/header.css", "/styles/index.css", "/styles/login.css",
             "/styles/registration.css", "/styles/styles.css",
             "/styles/error.css", "/styles/library.css",
+            "/js/bookUpload.bundle.js",
             "/js/passwordVisibilityChangerForLogin.bundle.js",
             "/js/passwordVisibilityChangerForRegistration.bundle.js"
     };
@@ -66,6 +68,7 @@ public class SecurityConfig {
     @Bean
     SecurityFilterChain securityFilterChain(HttpSecurity http, AuthenticationManager authentication,
                                             LoginAttemptLimiter limiter, AdminAccessPolicy adminAccess,
+                                            PrivateBookStorage storage,
                                             @Value("${online-reader.registration.max-attempts}") int registrationAttempts,
                                             @Value("${online-reader.registration.max-clients}") int registrationClients,
                                             @Value("${online-reader.registration.window}") String registrationWindow) throws Exception {
@@ -89,6 +92,9 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/login", "/registration").permitAll()
                         .requestMatchers(HttpMethod.GET, PUBLIC_RESOURCES).permitAll()
                         .requestMatchers(HttpMethod.HEAD, PUBLIC_RESOURCES).permitAll()
+                        .requestMatchers(HttpMethod.GET, "/library/upload", "/library/books/{id}/download").authenticated()
+                        .requestMatchers(HttpMethod.HEAD, "/library/upload", "/library/books/{id}/download").authenticated()
+                        .requestMatchers(HttpMethod.POST, "/library/upload").authenticated()
                         .requestMatchers(HttpMethod.GET, "/library", "/library/books/{id}", "/library/books/{id}/edit", "/library/books/{id}/delete").authenticated()
                         .requestMatchers(HttpMethod.HEAD, "/library", "/library/books/{id}", "/library/books/{id}/edit", "/library/books/{id}/delete").authenticated()
                         .requestMatchers(HttpMethod.POST, "/library/books/{id}/edit", "/library/books/{id}/delete").authenticated()
@@ -107,6 +113,8 @@ public class SecurityConfig {
                         .invalidateHttpSession(true).clearAuthentication(true).deleteCookies("JSESSIONID"));
         // Construct here, not as a Filter bean: Boot must not register it a second time outside CSRF.
         http.addFilterBefore(new LoginRequestFilter(limiter), UsernamePasswordAuthenticationFilter.class);
+        http.addFilterBefore(new UploadAdmissionFilter(storage), org.springframework.security.web.csrf.CsrfFilter.class);
+        http.addFilterAfter(new UploadReceiveFilter(), org.springframework.security.web.access.intercept.AuthorizationFilter.class);
         http.addFilterBefore(new RegistrationRequestFilter(new LoginAttemptLimiter(registrationAttempts,
                 registrationClients, DurationStyle.detectAndParse(registrationWindow))),
                 UsernamePasswordAuthenticationFilter.class);

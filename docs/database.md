@@ -11,6 +11,8 @@ User/Admin/Action и связующей таблице admin_actions. V2 рас�
 [registration.md](registration.md). V5 добавляет books с FK владельца, метаданными,
 неизменяемым source reference, состоянием и версией; ограничения/индексы,
 логическое удаление и восстановление —[library.md](library.md).
+V6 добавляет book_storage — binding к постоянной UUID identity файлового root.
+Привязка/lease и восстановление БД+sources+.identity —[book-files.md](book-files.md).
 Seed-аккаунтов и универсальных паролей нет.
 
 ## Запуск и изменение схемы
@@ -67,7 +69,7 @@ restore вместе с файлами книг остаётся [#28](https://g
 ```
 
 Первая команда запускает изолированную H2 suite. Вторая дополнительно запускает
-`PostgresMigrationsIT` на disposable PostgreSQL17: пустая БД → V1→V2→V3→V4→V5 → Hibernate
+`PostgresMigrationsIT` на disposable PostgreSQL17: пустая БД → V1→V2→V3→V4→V5→V6 → Hibernate
 validate и JPA-запись; UNIQUE/NOT NULL/длина/FK; повторный migrate с существующей
 записью без потери данных; преобразование legacy BCrypt и транзакционный rollback
 при неизвестном формате пароля; V2→V3 с сохранением legacy NULL/flags/hash,

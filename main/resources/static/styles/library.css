@@ -27,3 +27,7 @@
 .skip-link { position: absolute; left: 1rem; top: -10rem; background: white; color: #174c80; padding: .75rem; z-index: 1; }
 .skip-link:focus { top: 1rem; }
 @media (max-width: 25rem) { .library h1 { font-size: 1.7rem; } }
+
+.library input[type="file"] { display: block; max-width: 100%; min-height: 2.75rem; padding: .5rem 0; font: inherit; }
+.library button:disabled { background: #555; border-color: #555; cursor: wait; }
+.library #upload-status { margin-top: 1rem; }

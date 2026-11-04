@@ -18,7 +18,8 @@ production-ready состоянию с проверяемыми сборкой, 
 - Сейчас есть страницы главной, входа и регистрации, клиентское переключение
   видимости пароля и заготовки моделей аккаунтов. Вход через JPA/BCrypt и сессия реализованы;
   регистрация с обязательным email реализована; основа ролей и owner-проверки библиотеки
-  реализованы. Загрузка, чтение, прогресс и заметки ещё не реализованы;
+  реализованы. Загрузка/хранение/скачивание EPUB+TXT реализованы; чтение, прогресс
+  и заметки ещё не реализованы;
   #17 остаётся открытой до проверки владельца этих ресурсов.
 
 ## Приоритет инструкций и источники требований
@@ -87,7 +88,7 @@ Legacy admin/actions сохранены без переноса прав. Рол
 username/роли/флагов, owner-scoped SQL и блокировки с @Version. Не принимайте owner
 из HTTP и не добавляйте admin bypass. V5 хранит UUID/fingerprint/размер исходника;
 формы меняют только title/author, stale version возвращает409. DELETING закрывает
-карточку/запись, но сохраняет источник и резерв квоты до физической очистки #22.
+карточку/запись, но сохраняет источник и резерв квоты до подтверждённой физической очистки.
 Прогресс/заметки пока отсутствуют; #19 остаётся открытой до связанного удаления.
 Контракт и пределы проверок — [docs/library.md](docs/library.md).
 
@@ -104,8 +105,9 @@ dispatch рендерит фиксированный HTML/ProblemDetail чере
 не копируйте ErrorAttributes, exception/message/path/query или ввод в ответы.
 /error закреплён, whitelabel выключен, runtime overrides проверяются до I/O.
 Формы сохраняют HTML validation200/PRG, ошибку login302 и rate429 контракты.
-Политика/ограничения: [docs/http-security.md](docs/http-security.md). #18 остаётся
-открытой до реальных file MIME/disposition/cache/active-content проверок в #22.
+Политика/ограничения: [docs/http-security.md](docs/http-security.md). Реальные
+owner/MIME/disposition/cache/active-content проверки download — в #22.
+Reader sanitization и приватная выдача ресурсов ещё требуют #23.
 
 ## Структура и ответственность
 
@@ -223,7 +225,7 @@ SMTP auth/TLS выключены; соответствующие overrides от�
 Профили `postgres-it,mailpit-it` можно запускать вместе; обычная suite Docker не требует.
 Адреса, credentials, путь хранения, multipart-лимиты и конечные таймауты вынесены
 в окружение; контракт — `.env.example` и README. В `production` storage root
-обязателен и абсолютен; создание/права каталога проверяются при реализации #22.
+обязателен и абсолютен; создание/приватные права каталога проверяются при старте.
 Валидация конфигурации выполняется до I/O; ошибки содержат только имя параметра.
 JNDI, альтернативные Hikari connection settings и `spring.jpa.properties.*`
 отклоняются во всех профилях; не обходите основной datasource/DDL-контракт.
@@ -297,3 +299,32 @@ Env-файлы, credentials, `.git`, локальные caches и результ
   явного поручения пользователя. Не закрывайте issue, пока не выполнены все критерии.
 - В репозиторий входят исходники и итоговая документация, требуемая задачей;
   не коммитьте временные планы, отчёты инструментов и отладочные артефакты.
+
+## Файловый контракт
+
+Загрузка GET/POST `/library/upload`: сессия и штатный CSRF header обязательны до
+чтения тела. Нативный Spring/Servlet multipart выключен и guard запрещает включать
+его: неблокирующий receiver ограничивает2 запроса,11 МиБ/30с до streaming parse,
+затем processing2 workers без очереди/10с. Менять лимиты только со спецификацией.
+Текущие flags/immutable accountId проверяются сервисом до book/quota эффекта.
+Не передавайте SecurityContext через глобальную переменную; worker использует
+DelegatingSecurityContextRunnable, отмена синхронизирована с возвратом worker.
+Запросный slot освобождается отдельно от временного резерва: файлы/credit не
+освобождаются, пока worker ими пользуется. Pending cleanup учитывается в128 МиБ.
+
+V6 связывает БД с постоянной storage `.identity`; PG advisory lease и root FileLock
+запрещают два экземпляра/неверный каталог до recovery. Не сбрасывайте binding/identity
+ради запуска. Копируйте БД+sources+.identity одной остановленной точки. Compose
+сохраняет books-data вместе с postgres-data; root остаётся приватным и вне webroot.
+H2 URL и root уникальны для каждого Spring context, старый scheduler не должен
+затрагивать новые fixtures. Тесты lease/timeout/concurrency на H2 не заменяют PG IT.
+
+Book upload: SHA/dedup и count100/bytes1ГиБ атомарно под owner lock. PROCESSING
+создаётся до записи persistent source, READY только после validation/CREATE_NEW/fsync.
+Ошибка/отмена оставляет DELETING или восстанавливаемый PROCESSING; cleaner удаляет
+marker только после удаления bytes и завершения readers/writers. Не теряйте quota
+при ошибке storage и не воскрешайте DELETING. Будущие progress/notes удаляйте при
+первом DELETING commit (#25/#26). Исходники выдаются GET/HEAD owner+READY query до
+I/O, attachment с server filename, проверенным MIME, nosniff/no-store; raw EPUB
+XHTML/CSS/JS не становится страницей приложения. Reader sanitization —#23.
+Подробности, abuse cases, budgets и ограничения —[docs/book-files.md](docs/book-files.md).

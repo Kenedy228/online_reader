@@ -43,6 +43,7 @@ class RegistrationPostgresIT {
                 "spring.datasource.url", DATABASE.getJdbcUrl(),
                 "spring.datasource.username", DATABASE.getUsername(),
                 "spring.datasource.password", DATABASE.getPassword(),
+                "online-reader.storage.root", java.nio.file.Path.of(System.getProperty("java.io.tmpdir"), "dostoread-pg-" + UUID.randomUUID()).toString(),
                 "server.address", "127.0.0.1",
                 "logging.level.root", "WARN", "spring.main.banner-mode", "off");
         var application = new SpringApplication(OnlineReaderApplication.class);
