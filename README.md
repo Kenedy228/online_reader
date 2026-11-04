@@ -142,6 +142,10 @@ Mailpit. Makefile не исполняет `.env` как shell-код: значе
 | `make lint` | Pinned frontend install + ESLint |
 | `make test` | Frontend checks и изолированные Java-тесты без Docker |
 | `make test-integration` | Обычные проверки + disposable PostgreSQL/Mailpit IT |
+| `make setup-e2e` | Pinned browser tools и Chromium; OS libraries отдельно |
+| `make test-e2e` | Обычные проверки + критические browser сценарии на своей PostgreSQL/Mailpit |
+| `make test-acceptance` | Обычные проверки + PostgreSQL/Mailpit IT + browser E2E (CI) |
+| `make test-performance` | Opt-in замеры10 пользователей/1000 книг на app+DB2CPU/4ГиБ |
 | `make check` | Clean verify: typecheck → lint → bundles → Java tests → JAR |
 | `make secret-check` | Scanner fixtures и staged changes; CI использует `SECRET_MODE=snapshot` |
 | `make clean` | Только Maven target; env, node_modules, БД и книги сохраняются |
@@ -279,6 +283,12 @@ PostgreSQL, Mailpit и приложение доступны через Docker C
 в [#15](https://github.com/Kenedy228/online_reader/issues/15).
 
 ## Проверки
+
+Матрица рисков, воспроизводимые E2E/CI, требования Chromium, измерения и
+границы evidence —[docs/quality.md](docs/quality.md). Browser tests используют
+отдельный `test/browser` package с pinned Playwright/axe, временные аккаунты,
+свои PostgreSQL/Mailpit/storage; `.env` и пользовательские данные не используются.
+
 
 Frontend-команды из `main/frontend`:
 

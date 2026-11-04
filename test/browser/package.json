@@ -1,0 +1,10 @@
+{
+  "name": "dostoread-browser-checks",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Disposable reader acceptance checks; not runtime dependencies",
+  "devDependencies": {
+    "playwright": "1.64.1",
+    "@axe-core/playwright": "4.14.0"
+  }
+}
